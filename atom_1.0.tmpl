@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="{{ encoding }}"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title type="{{ feed.title_detail.type }}" xml:lang="{{ feed.title_detail.language }}" xml:base="{{ feed.title_detail.base }}">{{ feed.title|escape }}</title>
+{% for link in feed.links %}
+    <link rel="{{ link.rel }}" type="{{ link.type }}" href="{{ link.href }}" title="{{ link.title }}"/>
+{% endfor %}
+    <subtitle type="{{ feed.subtitle_detail.type }}" xml:lang="{{ feed.subtitle_detail.language }}" xml:base="{{ feed.subtitle_detail.base }}">{{ feed.subtitle|escape }}</subtitle>
+    <rights type="{{ feed.rights_detail.type }}" xml:lang="{{ feed.rights_detail.language }}" xml:base="{{ feed.rights_detail.base }}">{{ feed.rights|escape }}</rights>
+    <generator uri="{{ feed.generator_detail.href }}" version="{{ feed.generator_detail.version }}">{{ feed.generator }}</generator>
+    <info type="{{ feed.info_detail.type }}" xml:lang="{{ feed.info_detail.language }}" xml:base="{{ feed.info_detail.base }}">{{ feed.info|escape }}</info>
+    <updated>{{ feed.updated }}</updated>
+    <id>{{ feed.id }}</id>
+    <author>
+        <name>{{ feed.author }}</name>
+        <uri>{{ feed.author_detail.href }}</uri>
+        <email>{{ feed.author_detail.email }}</email>
+    </author>
+{% for contributor in feed.contributors %}
+    <contributor>
+        <name>{{ contributor }}</name>
+        <uri>{{ contributor_detail.href }}</uri>
+        <email>{{ contributor_detail.email }}</email>
+    </contributor>
+{% endfor %}
+    <image>
+        <title>{{ feed.image.title }}</title>
+        <url>{{ feed.image.href }}</url>
+        <link>{{ feed.image.link }}</link>
+        <width>{{ feed.image.width }}</width>
+        <height>{{ feed.image.height }}</height>
+        <description>{{ feed.image.description }}</description>
+    </image>
+    <icon>{{ feed.icon }}</icon>
+    <!-- not part of Atom 1.0: feed.textinput -->
+    <!-- not part of Atom 1.0: feed.cloud -->
+    <publisher>
+        <name>{{ feed.publisher }}</name>
+        <uri>{{ feed.publisher_detail.href }}</uri>
+        <email>{{ feed.publisher_detail.email }}</email>
+    </publisher>
+{% for tag in feed.tags %}
+    <tag>
+        <term>{{ tag.term }}</term>
+        <scheme>{{ tag.scheme }}</scheme>
+        <label>{{ tag.label }}</label>
+    </tag>
+{% endfor %}
+    <language>{{ feed.language }}</language>
+    <!-- not part of Atom 1.0: feed.license -->
+    <!-- not part of Atom 1.0: feed.errorreportsto -->
+{% for entry in entries %}
+    <entry>
+        <title type="{{ entry.title_detail.type }}" xml:lang="{{ entry.title_detail.language }}" xml:base="{{ entry.title_detail.base }}">{{ entry.title|escape }}</title>
+    {% for link in entry.links %}
+        <link rel="{{ link.rel }}" type="{{ link.type }}" href="{{ link.href }}" title="{{ link.title }}"/>
+    {% endfor %}
+        <summary type="{{ entry.summary_detail.type }}" xml:lang="{{ entry.summary_detail.language }}" xml:base="{{ entry.summary_detail.base }}">{{ entry.summary|escape }}</summary>
+    {% for content in entry.content %}
+        <content type="{{ content.type }}" xml:lang="{{ content.language }}" xml:base="{{ content.base }}">{{ content.value|escape }}</content>
+    {% endfor %}
+        <published>{{ entry.published }}</published>
+        <updated>{{ entry.updated }}</updated>
+        <created>{{ entry.created }}</created>
+        <!-- not part of Atom 1.0: entry.expired -->
+        <id>{{ entry.id }}</id>
+        <author>
+            <name>{{ entry.author }}</name>
+            <uri>{{ entry.author_detail.href }}</uri>
+            <email>{{ entry.author_detail.email }}</email>
+        </author>
+    {% for contributor in entry.contributors %}
+        <contributor>
+            <name>{{ contributor }}</name>
+            <uri>{{ contributor_detail.href }}</uri>
+            <email>{{ contributor_detail.email }}</email>
+        </contributor>
+    {% endfor %}
+    {% for enclosure in entry.enclosures %}
+        <link rel="enclosure" href="{{ enclosure.href }}" length="{{ enclosure.length }}" type="{{ enclosure.type }}"/>
+    {% endfor %}
+        <publisher>
+            <name>{{ entry.publisher }}</name>
+            <uri>{{ entry.publisher_detail.href }}</uri>
+            <email>{{ entry.publisher_detail.email }}</email>
+        </publisher>
+    {% for tag in entry.tags %}
+        <tag>
+            <term>{{ tag.term }}</term>
+            <scheme>{{ tag.scheme }}</scheme>
+            <label>{{ tag.label }}</label>
+        </tag>
+    {% endfor %}
+    <source>
+        <author>
+            <name>{{ entry.source.author }}</name>
+            <uri>{{ entry.source.author_detail.href }}</uri>
+            <email>{{ entry.source.author_detail.email }}</email>
+        </author>
+    {% for contributor in entry.source.contributors %}
+        <contributor>
+            <name>{{ contributor }}</name>
+            <uri>{{ contributor_detail.href }}</uri>
+            <email>{{ contributor_detail.email }}</email>
+        </contributor>
+    {% endfor %}
+        <icon>{{ entry.source.icon }}</icon>
+        <id>{{ entry.source.id }}</id>
+    {% for link in entry.source.links %}
+        <link rel="{{ link.rel }}" type="{{ link.type }}" href="{{ link.href }}" title="{{ link.title }}"/>
+    {% endfor %}
+        <logo>{{ entry.source.logo }}</logo>
+        <rights type="{{ entry.source.rights_detail.type }}" xml:lang="{{ entry.source.rights_detail.language }}" xml:base="{{ entry.source.rights_detail.base }}">{{ entry.source.rights|escape }}</rights>
+        <subtitle type="{{ entry.source.subtitle_detail.type }}" xml:lang="{{ entry.source.subtitle_detail.language }}" xml:base="{{ entry.source.subtitle_detail.base }}">{{ entry.source.subtitle|escape }}</subtitle>
+        <title type="{{ entry.source.title_detail.type }}" xml:lang="{{ entry.source.title_detail.language }}" xml:base="{{ entry.source.title_detail.base }}">{{ entry.source.title|escape }}</title>
+        <updated>{{ entry.source.updated }}</updated>
+    </source>
+    <!-- not part of Atom 1.0: entry.comments -->
+    <!-- not part of Atom 1.0: entry.license -->
+    </entry>
+{% endfor %}
+    <!-- meaningless: version (this is Atom 1.0) -->
+    <!-- meaningless: namespaces (namespace set to "http://www.w3.org/2005/Atom" in the <feed> tag) -->
+    <!-- somewhere else: encoding (in the XML declaration) -->
+    <!-- meaningless: status (HTTP status) -->
+    <!-- meaningless: href (present if server redirect when fetching the original feed) -->
+    <!-- meaningless: etag (part of HTTP headers) -->
+    <!-- meaningless: modified (part of HTTP headers) -->
+    <!-- meaningless: headers (HTTP headers) -->
+    <!-- meaningless: bozo (set to 1 if not well-formed XML) -->
+    <!-- meaningless: bozo_exception -->
+</feed>
