@@ -32,6 +32,9 @@ def improve_item(item):
   if is_blog_activity_item(item):
     logging.info('------ Improving blog activity item %s', item['title'])
     improve_blog_activity_item(item)
+  elif is_forum_activity_item(item):
+    logging.info('------ Improving blog activity item %s', item['title'])
+    improve_blog_activity_item(item)
   else:
     logging.warn('------ Skipping unknown feed item %s (%s)',
                  item['id'], item['title'])
@@ -56,6 +59,20 @@ def is_blog_activity_item(item):
 def is_blog_activity_url(url):
   regex = re.compile(r'http://diydrones.com/xn/detail/[0-9]+:BlogPost:[0-9]+')
   return regex.search(url)
+
+
+def is_forum_activity_item(item):
+  soup = bs4.BeautifulSoup(item['summary'])
+  for anchor in soup.find_all('a'):
+    if is_forum_activity_url(unicode(anchor)):
+      return True
+  return False
+
+
+def is_forum_activity_url(url):
+  regex = re.compile(r'http://diydrones.com/xn/detail/[0-9]+:Topic:[0-9]+')
+  return regex.search(url)
+
 
 
 def parse_activity_comment_link(url):
