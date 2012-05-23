@@ -5,7 +5,6 @@ Creates a usable version of the diydrones.com activity feed.
 __author__ = 'John Wiseman <jjwiseman@gmail.com>'
 
 import logging
-import pprint
 import re
 import StringIO
 import sys
@@ -16,7 +15,12 @@ from django import template as django_template
 from django.conf import settings as django_settings
 import feedparser
 
+# Need to do this to use django templates.
 django_settings.configure()
+
+
+class Error(Exception):
+  pass
 
 
 def improve_feed(feed):
@@ -26,10 +30,11 @@ def improve_feed(feed):
 
 def improve_item(item):
   if is_blog_activity_item(item):
-    logging.info('------ Improving item %s', item['title'])
+    logging.info('------ Improving blog activity item %s', item['title'])
     improve_blog_activity_item(item)
   else:
-    logging.info('------ Unknown item %s', item['title'])
+    logging.warn('------ Skipping unknown feed item %s (%s)',
+                 item['id'], item['title'])
 
 
 def improve_blog_activity_item(item):
@@ -76,19 +81,19 @@ def comment_id_from_comment_url(url):
 
 def get_comment(url):
   idstr = comment_id_from_comment_url(url)
-  logging.info('Looking for comment %s', idstr)
-  logging.info('at url %s', url)
+  logging.info('Looking for comment %s from url %s', idstr, url)
   soup = fetch_html(url)
-  logging.info('encoding=%s', soup.originalEncoding)
   tag = soup.find(_id=idstr)
   if not tag:
-    logging.info('NOT FOUND')
-    assert False
-    for i, line in enumerate(StringIO.StringIO(unicode(soup))):
-      if line.find(idstr) >= 0:
-        logging.info('%s: %s', i, line)
-  logging.info('Found comment: %s', tag)
+    raise Error('Could not find comment %s at url %s' % (idstr, url))
+  logging.info('Found comment: %s', tag_summary(tag))
   return unicode(tag)
+
+
+def tag_summary(tag):
+  s = StringIO.StringIO(unicode(tag))
+  for line in s:
+    return line[:-1]
 
 
 def fetch_html(url):
@@ -96,7 +101,6 @@ def fetch_html(url):
   content = req.read()
   encoding = req.headers['content-type'].split('charset=')[-1]
   logging.info('Fetched URL %s with charset=%s', url, encoding)
-  logging.info('content type=%s', type(content))
   soup = bs4.BeautifulSoup(content, from_encoding='utf-8')
   return soup
 
