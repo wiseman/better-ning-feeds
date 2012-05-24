@@ -60,11 +60,19 @@ def improve_blog_comment_item(item):
 
 
 BLOG_COMMENT_LINK_RE = re.compile(
-  r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)')
+  r'http://diydrones.com/xn/detail/([0-9]+):BlogPost:([0-9]+)')
 
 
 def is_blog_comment_url(url):
   return BLOG_COMMENT_LINK_RE.search(url)
+
+
+def is_blog_comment_item(item):
+  soup = bs4.BeautifulSoup(item['summary'])
+  for anchor in soup.find_all('a'):
+    if is_blog_comment_url(unicode(anchor)):
+      return True
+  return False
 
 
 def parse_blog_comment_link(url):
@@ -74,14 +82,6 @@ def parse_blog_comment_link(url):
   else:
     raise Error('%s does not seem to be a blog comment link.' % (
       url,))
-
-
-def is_blog_comment_item(item):
-  soup = bs4.BeautifulSoup(item['summary'])
-  for anchor in soup.find_all('a'):
-    if is_blog_comment_url(unicode(anchor)):
-      return True
-  return False
 
 
 # --------------------
