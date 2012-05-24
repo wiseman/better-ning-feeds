@@ -44,6 +44,20 @@ def improve_item(item):
                  item['id'], item['title'])
 
 
+
+COMMENT_LINK_RE = re.compile(
+  r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)')
+
+
+def parse_comment_link(url):
+  match = COMMENT_LINK_RE.search(url)
+  if match:
+    return match.group(1), match.group(2)
+  else:
+    raise Error('%s does not seem to be a comment link.' % (
+      url,))
+
+
 # --------------------
 # Blog comments
 # --------------------
@@ -67,50 +81,17 @@ def is_blog_comment_url(url):
   return BLOG_COMMENT_LINK_RE.search(url)
 
 
+BLOG_COMMENT_TITLE_RE = re.compile(
+  r'commented on.+blog post')
+
+
 def is_blog_comment_item(item):
-  soup = bs4.BeautifulSoup(item['summary'])
-  for anchor in soup.find_all('a'):
-    if is_blog_comment_url(unicode(anchor)):
-      return True
+  if BLOG_COMMENT_TITLE_RE.search(item['title']):
+    soup = bs4.BeautifulSoup(item['summary'])
+    for anchor in soup.find_all('a'):
+      if is_blog_comment_url(unicode(anchor)):
+        return True
   return False
-
-
-def parse_blog_comment_link(url):
-  match = BLOG_COMMENT_LINK_RE.search(url)
-  if match:
-    return match.group(1), match.group(2)
-  else:
-    raise Error('%s does not seem to be a blog comment link.' % (
-      url,))
-
-
-# --------------------
-# Forum replies
-# --------------------
-
-def improve_forum_reply_item(item):
-  reply_body = get_forum_reply(item['link'])
-
-
-FORUM_REPLY_LINK_RE = re.compile(
-  r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+')
-
-
-def is_forum_activity_url(url):
-  return FORUM_REPLY_LINK_RE.search(url)
-
-
-def is_forum_activity_item(item):
-  soup = bs4.BeautifulSoup(item['summary'])
-  for anchor in soup.find_all('a'):
-    if is_forum_activity_url(unicode(anchor)):
-      return True
-  return False
-
-
-def blog_comment_id_from_url(url):
-  blog_id, comment_id = parse_blog_comment_link(url)
-  return '%s:Comment:%s' % (blog_id, comment_id)
 
 
 def get_blog_comment(url):
@@ -122,17 +103,49 @@ def get_blog_comment(url):
     logging.info('Found comment: %s', tag_summary(tag))
     return unicode(tag)
   else:
-    logging.error('Could not find comment %s at url %s', idstr, url)
+    logging.error('Could not find blog comment %s at url %s', idstr, url)
     return None
 
 
-def parse_forum_reply_link(url):
-  match = FORUM_REPLY_LINK_RE.search(url)
-  if match:
-    return match.group(1), match.group(2)
-  else:
-    raise ValueError('%s does not seem to be an activity forum reply link.' % (
-      url,))
+def blog_comment_id_from_url(url):
+  blog_id, comment_id = parse_comment_link(url)
+  return '%s:Comment:%s' % (blog_id, comment_id)
+
+
+# --------------------
+# Forum replies
+# --------------------
+
+def improve_forum_reply_item(item):
+  reply_body = get_forum_reply(item['link'])
+  if not reply_body:
+    logging.error('Skipping improvement of item, could not find reply.')
+    return
+  summary = item['summary']
+  summary += '\n'
+  summary += reply_body
+  item['summary'] = summary
+
+
+FORUM_REPLY_LINK_RE = re.compile(
+  r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+')
+
+
+def is_forum_activity_url(url):
+  return FORUM_REPLY_LINK_RE.search(url)
+
+
+FORUM_REPLY_TITLE_RE = re.compile(
+  r'replied.*to.*discussion')
+
+
+def is_forum_activity_item(item):
+  if FORUM_REPLY_TITLE_RE.search(item['title']):
+    soup = bs4.BeautifulSoup(item['summary'])
+    for anchor in soup.find_all('a'):
+      if is_forum_activity_url(unicode(anchor)):
+        return True
+  return False
 
 
 def get_forum_reply(url):
@@ -140,14 +153,17 @@ def get_forum_reply(url):
   logging.info('Looking for forum reply %s from url %s', idstr, url)
   soup = fetch_html(url)
   tag = soup.find(id=idstr)
-  if not tag:
-    raise Error('Could not find comment %s at url %s' % (idstr, url))
-  logging.info('Found forum reply: %s', tag_summary(tag))
+  if tag:
+    logging.info('Found forum reply: %s', tag_summary(tag))
+    return unicode(tag)
+  else:
+    logging.error('Could not find forum reply %s at url %s', idstr, url)
+    return None
 
 
 def forum_reply_id_from_url(url):
-  blog_id, reply_id = parse_forum_reply_link(url)
-  return 'desc%sComment%s' % (blog_id, reply_id)
+  blog_id, reply_id = parse_comment_link(url)
+  return 'desc_%sComment%s' % (blog_id, reply_id)
 
 
 def tag_summary(tag):
