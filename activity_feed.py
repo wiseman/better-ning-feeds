@@ -25,40 +25,79 @@ class Error(Exception):
 
 def improve_feed(feed):
   for item in feed['items']:
-    improve_item(item)
+    try:
+      improve_item(item)
+    except Error, e:
+      logging.error('Skipping item %s (%s) due to error %s',
+                    item['id'], item['title'], e)
 
 
 def improve_item(item):
-  if is_blog_activity_item(item):
-    logging.info('------ Improving blog activity item %s', item['title'])
-    improve_blog_activity_item(item)
+  if is_blog_comment_item(item):
+    logging.info('------ Improving blog comment item %s', item['title'])
+    improve_blog_comment_item(item)
   elif is_forum_activity_item(item):
-    logging.info('------ Improving blog activity item %s', item['title'])
-    improve_blog_activity_item(item)
+    logging.info('------ Improving forum reply item %s', item['title'])
+    improve_forum_reply_item(item)
   else:
     logging.warn('------ Skipping unknown feed item %s (%s)',
                  item['id'], item['title'])
 
 
-def improve_blog_activity_item(item):
-  comment_body = get_comment(item['link'])
+# --------------------
+# Blog comments
+# --------------------
+
+def improve_blog_comment_item(item):
+  comment_body = get_blog_comment(item['link'])
+  if not comment_body:
+    logging.error('Skipping improvement of item, could not find comment.')
+    return
   summary = item['summary']
   summary += '\n'
   summary += comment_body
   item['summary'] = summary
 
 
-def is_blog_activity_item(item):
+BLOG_COMMENT_LINK_RE = re.compile(
+  r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)')
+
+
+def is_blog_comment_url(url):
+  return BLOG_COMMENT_LINK_RE.search(url)
+
+
+def parse_blog_comment_link(url):
+  match = BLOG_COMMENT_LINK_RE.search(url)
+  if match:
+    return match.group(1), match.group(2)
+  else:
+    raise Error('%s does not seem to be a blog comment link.' % (
+      url,))
+
+
+def is_blog_comment_item(item):
   soup = bs4.BeautifulSoup(item['summary'])
   for anchor in soup.find_all('a'):
-    if is_blog_activity_url(unicode(anchor)):
+    if is_blog_comment_url(unicode(anchor)):
       return True
   return False
 
 
-def is_blog_activity_url(url):
-  regex = re.compile(r'http://diydrones.com/xn/detail/[0-9]+:BlogPost:[0-9]+')
-  return regex.search(url)
+# --------------------
+# Forum replies
+# --------------------
+
+def improve_forum_reply_item(item):
+  reply_body = get_forum_reply(item['link'])
+
+
+FORUM_REPLY_LINK_RE = re.compile(
+  r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+')
+
+
+def is_forum_activity_url(url):
+  return FORUM_REPLY_LINK_RE.search(url)
 
 
 def is_forum_activity_item(item):
@@ -69,42 +108,46 @@ def is_forum_activity_item(item):
   return False
 
 
-def is_forum_activity_url(url):
-  regex = re.compile(r'http://diydrones.com/xn/detail/[0-9]+:Topic:[0-9]+')
-  return regex.search(url)
-
-
-
-def parse_activity_comment_link(url):
-  """Returns (post ID, comment ID).
-
-  Example: Given the URL
-  'http://diydrones.com/xn/detail/705844:Comment:868656?xg_source=activity'
-  we would return (705844, 868656).
-  """
-  regex = r'/detail/([0-9]*):Comment:([0-9]*)\?'
-  match = re.search(regex, url)
-  if match:
-    return match.group(1), match.group(2)
-  else:
-    raise ValueError('%s does not seem to be an activity comment link.' % (
-      url,))
-
-
-def comment_id_from_comment_url(url):
-  blog_id, comment_id = parse_activity_comment_link(url)
+def blog_comment_id_from_url(url):
+  blog_id, comment_id = parse_blog_comment_link(url)
   return '%s:Comment:%s' % (blog_id, comment_id)
 
 
-def get_comment(url):
-  idstr = comment_id_from_comment_url(url)
+def get_blog_comment(url):
+  idstr = blog_comment_id_from_url(url)
   logging.info('Looking for comment %s from url %s', idstr, url)
   soup = fetch_html(url)
   tag = soup.find(_id=idstr)
+  if tag:
+    logging.info('Found comment: %s', tag_summary(tag))
+    return unicode(tag)
+  else:
+    logging.error('Could not find comment %s at url %s', idstr, url)
+    return None
+
+
+def parse_forum_reply_link(url):
+  match = FORUM_REPLY_LINK_RE.search(url)
+  if match:
+    return match.group(1), match.group(2)
+  else:
+    raise ValueError('%s does not seem to be an activity forum reply link.' % (
+      url,))
+
+
+def get_forum_reply(url):
+  idstr = forum_reply_id_from_url(url)
+  logging.info('Looking for forum reply %s from url %s', idstr, url)
+  soup = fetch_html(url)
+  tag = soup.find(id=idstr)
   if not tag:
     raise Error('Could not find comment %s at url %s' % (idstr, url))
-  logging.info('Found comment: %s', tag_summary(tag))
-  return unicode(tag)
+  logging.info('Found forum reply: %s', tag_summary(tag))
+
+
+def forum_reply_id_from_url(url):
+  blog_id, reply_id = parse_forum_reply_link(url)
+  return 'desc%sComment%s' % (blog_id, reply_id)
 
 
 def tag_summary(tag):
