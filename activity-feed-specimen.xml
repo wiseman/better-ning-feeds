@@ -1,0 +1,81 @@
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:media="http://search.yahoo.com/mrss/"
+    xmlns:georss="http://www.w3.org/2003/01/geo/wgs84_pos#"
+    >
+    <channel>
+        <title>Latest Activity on  DIY Drones</title>
+        <description></description>
+        <link>http://diydrones.com</link>
+        <pubDate>Thu, 24 May 2012 00:16:18 +0000</pubDate>
+        <lastBuildDate>Thu, 24 May 2012 00:16:18 +0000</lastBuildDate>
+        <image>
+            <title>Latest Activity on  DIY Drones</title>
+            <link>http://diydrones.com</link>
+            <url>http://api.ning.com/icons/appatar/705844?default=705844&amp;width=50&amp;height=50</url>
+            <height>50</height>
+        </image>
+        <item>
+               <guid isPermaLink="false">00000000000ac534000000000a7c0cf65b2e557a416c09aa</guid>
+               <title>James Y. replied to Lloyd DeForrest&#039;s discussion Flight Modes:  Can I configure a &quot;SImple FPV&quot; mode?</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868796?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/JamesYoung324?xg_source=activity">James Y.</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868796?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/LloydDeForrest?xg_source=activity">Lloyd DeForrest's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:868841?xg_source=activity">Flight Modes:  Can I configure a &quot;SImple FPV&quot; mode?</a></span><br/>]]></description>
+               <pubDate>Thu, 24 May 2012 00:10:36 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac53400000000022513a0c74a258178f8a0d3</guid>
+               <title>Monroe replied to Jake Stew&#039;s discussion Gas Engine Quad, Ideas and Solutions...</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868793?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/Monroe?xg_source=activity">Monroe</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868793?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/JakeStew?xg_source=activity">Jake Stew's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:860367?xg_source=activity">Gas Engine Quad, Ideas and Solutions...</a></span><br/>]]></description>
+               <pubDate>Thu, 24 May 2012 00:10:23 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac5340000000009d74c38a6f4e9af0ee25c54</guid>
+               <title>Vernon Barry replied to Nickolas Myers&#039;s discussion What to get?</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868722?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/VernonBarry?xg_source=activity">Vernon Barry</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868722?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/NickolasMyers?xg_source=activity">Nickolas Myers's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:866841?xg_source=activity">What to get?</a></span><br/>]]></description>
+               <pubDate>Thu, 24 May 2012 00:07:03 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac5340000000004f67d503b19ec43f9556a42</guid>
+               <title>Sandro Benigno commented on airmamaf&#039;s blog post Display RSSI with ArduCAM OSD</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868939?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/SandroBenigno?xg_source=activity">Sandro Benigno</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868939?xg_source=activity">commented</a> on <a href="http://diydrones.com/profile/airmamaf?xg_source=activity">airmamaf's</a> blog post <a href="http://diydrones.com/xn/detail/705844:BlogPost:862447?xg_source=activity">Display RSSI with ArduCAM OSD</a></span><br/>]]></description>
+               <pubDate>Thu, 24 May 2012 00:05:45 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac534000000000aaec803fdfad4e4185d1d70</guid>
+               <title>Karl replied to Christian&#039;s discussion Xbee Telemetry kit 2.4 GHz  + APM 2</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868716?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/Karl459?xg_source=activity">Karl</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868716?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/Christian754?xg_source=activity">Christian's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:859903?xg_source=activity">Xbee Telemetry kit 2.4 GHz  + APM 2</a></span><br/>]]></description>
+               <pubDate>Thu, 24 May 2012 00:02:32 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac534000000000aaec80301787f9109418ec8</guid>
+               <title>Karl replied to Muthanna A. Attyah&#039;s discussion No signal on APM2.0 UART0 and XBEE issue</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868862?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/Karl459?xg_source=activity">Karl</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868862?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/MuthannaAttyah?xg_source=activity">Muthanna A. Attyah's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:845729?xg_source=activity">No signal on APM2.0 UART0 and XBEE issue</a></span><br/>]]></description>
+               <pubDate>Wed, 23 May 2012 23:51:55 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac5340000000000104f1a7190242e850fa20b</guid>
+               <title>Mark Harrison replied to Jake Stew&#039;s discussion Gas Engine Quad, Ideas and Solutions...</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868714?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/MarkHarrison?xg_source=activity">Mark Harrison</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868714?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/JakeStew?xg_source=activity">Jake Stew's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:860367?xg_source=activity">Gas Engine Quad, Ideas and Solutions...</a></span><br/>]]></description>
+               <pubDate>Wed, 23 May 2012 23:48:19 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac534000000000784f1247111383a977b358c</guid>
+               <title>Maxime Carrier commented on Barry Nash&#039;s blog post Almost Ready</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868791?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/psycomaxter?xg_source=activity">Maxime Carrier</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868791?xg_source=activity">commented</a> on <a href="http://diydrones.com/profile/BarryNash?xg_source=activity">Barry Nash's</a> blog post <a href="http://diydrones.com/xn/detail/705844:BlogPost:868754?xg_source=activity">Almost Ready</a></span><br/>]]></description>
+               <pubDate>Wed, 23 May 2012 23:45:59 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac53400000000022513a04077ac1a08d8e117</guid>
+               <title>Monroe posted blog posts</title>
+               <link>http://diydrones.com/xn/detail/705844:BlogPost:868789?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/Monroe?xg_source=activity">Monroe</a> posted blog posts</span><br/><div class="rich"><div class="rich-detail"><ul class="links"><li><h3 class="feed-story-title"><a href="http://diydrones.com/xn/detail/705844:BlogPost:868789?xg_source=activity">GPS Preamp for SDR</a></h3></li><li><h3 class="feed-story-title"><a href="http://diydrones.com/xn/detail/705844:BlogPost:868448?xg_source=activity">Cold Gas Thruster Help</a></h3></li></ul></div></div>]]></description>
+               <pubDate>Wed, 23 May 2012 23:45:30 +0000</pubDate>
+               </item><item>
+               <guid isPermaLink="false">00000000000ac5340000000007bee369ef9d8f34d245c7d1</guid>
+               <title>Hai Tran commented on Hai Tran&#039;s blog post Drone creates an eye in the sky</title>
+               <link>http://diydrones.com/xn/detail/705844:Comment:868514?xg_source=activity</link>
+               <description><![CDATA[ <span class="feed-string"><a href="http://diydrones.com/profile/HaiTran?xg_source=activity">Hai Tran</a> <a href="http://diydrones.com/xn/detail/705844:Comment:868514?xg_source=activity">commented</a> on <a href="http://diydrones.com/profile/HaiTran?xg_source=activity">Hai Tran's</a> blog post <a href="http://diydrones.com/xn/detail/705844:BlogPost:867808?xg_source=activity">Drone creates an eye in the sky</a></span><br/>]]></description>
+               <pubDate>Wed, 23 May 2012 23:40:55 +0000</pubDate>
+               </item>    </channel>
+</rss>
