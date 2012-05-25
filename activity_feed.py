@@ -4,6 +4,7 @@ Creates a usable version of the diydrones.com activity feed.
 
 __author__ = 'John Wiseman <jjwiseman@gmail.com>'
 
+import argparse
 import logging
 import re
 import StringIO
@@ -13,6 +14,7 @@ import urllib2
 import bs4
 from django import template as django_template
 from django.conf import settings as django_settings
+
 import feedparser
 
 # Need to do this to use django templates.
@@ -21,6 +23,19 @@ django_settings.configure()
 
 class Error(Exception):
   pass
+
+
+LOGGING_LEVELS = {
+  'DEBUG': logging.DEBUG,
+  'INFO': logging.INFO,
+  'WARNING': logging.WARNING,
+  'ERROR': logging.ERROR,
+  'CRITICAL': logging.CRITICAL
+  }
+
+
+def get_logging_level_by_name(name):
+  return LOGGING_LEVELS[name]
 
 
 def improve_feed(feed):
@@ -42,7 +57,6 @@ def improve_item(item):
   else:
     logging.warn('------ Skipping unknown feed item %s (%s)',
                  item['id'], item['title'])
-
 
 
 COMMENT_LINK_RE = re.compile(
@@ -172,31 +186,69 @@ def tag_summary(tag):
     return line[:-1]
 
 
+HTML_CACHE = {}
+
+
 def fetch_html(url):
-  req = urllib2.urlopen(url)
-  content = req.read()
-  encoding = req.headers['content-type'].split('charset=')[-1]
-  logging.info('Fetched URL %s with charset=%s', url, encoding)
-  soup = bs4.BeautifulSoup(content, from_encoding='utf-8')
-  return soup
+  if not (url in HTML_CACHE):
+    req = urllib2.urlopen(url)
+    content = req.read()
+    encoding = req.headers['content-type'].split('charset=')[-1]
+    logging.info('Fetched URL %s with charset=%s', url, encoding)
+    soup = bs4.BeautifulSoup(content, from_encoding='utf-8')
+    HTML_CACHE[url] = soup
+  return HTML_CACHE[url]
 
 
 def process_feed(feed_url):
   feed = feedparser.parse(feed_url)
   improve_feed(feed)
+  feed.feed.id = feed_url
   return generate_feed(feed)
 
 
 def generate_feed(feed):
   with open('atom_1.0.tmpl', 'rb') as tmpl_in:
     template = django_template.Template(tmpl_in.read())
+    for item in feed['items']:
+      item['title_detail']['language'] = 'en-us'
     return template.render(django_template.Context(feed))
 
 
+# def generate_feed(feed):
+#   rss = feedgenerator.Rss201rev2Feed(
+#     title=feed.feed.title,
+#     link=feed.feed.link,
+#     description=feed.feed.description)
+#   for item in feed['items']:
+#     rss.add_item(title=item['title'],
+#                  link=item['link'],
+#                  description=item.summary)
+#   return rss.writeString('utf8')
+
+
 def main():
-  logging.basicConfig(level=logging.DEBUG)
-  input_feed_url = sys.argv[1]
-  output_feed = process_feed(input_feed_url)
+  parser = argparse.ArgumentParser(
+    description='Improve a Ning activity feed.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument(
+    'input',
+    help='URL of the input feed')
+  parser.add_argument(
+    '--log_level',
+    dest='log_level',
+    choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+    default='INFO',
+    help='The logging level to use.')
+  parser.add_argument(
+    '--output-format',
+    dest='output_format',
+    choices=['rss2.0', 'atom1.0'],
+    default='rss2.0',
+    help='The desired output format')
+  args = parser.parse_args()
+  logging.basicConfig(level=get_logging_level_by_name(args.log_level))
+  output_feed = process_feed(args.input)
   sys.stdout.write(output_feed.encode('utf-8'))
 
 

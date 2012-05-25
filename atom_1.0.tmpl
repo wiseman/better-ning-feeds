@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="{{ encoding }}"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title type="{{ feed.title_detail.type }}" xml:lang="{{ feed.title_detail.language }}" xml:base="{{ feed.title_detail.base }}">{{ feed.title|escape }}</title>
+    <title
+{% if feed.title_detail.language %}
+           xml:lang="{{ feed.title_detail.language }}"
+{% endif %}
+           xml:base="{{ feed.title_detail.base }}">{{ feed.title|escape }}</title>
 {% for link in feed.links %}
     <link rel="{{ link.rel }}" type="{{ link.type }}" href="{{ link.href }}" title="{{ link.title }}"/>
 {% endfor %}
-    <subtitle type="{{ feed.subtitle_detail.type }}" xml:lang="{{ feed.subtitle_detail.language }}" xml:base="{{ feed.subtitle_detail.base }}">{{ feed.subtitle|escape }}</subtitle>
+    <subtitle xml:base="{{ feed.subtitle_detail.base }}">{{ feed.subtitle|escape }}</subtitle>
     <rights type="{{ feed.rights_detail.type }}" xml:lang="{{ feed.rights_detail.language }}" xml:base="{{ feed.rights_detail.base }}">{{ feed.rights|escape }}</rights>
     <generator uri="{{ feed.generator_detail.href }}" version="{{ feed.generator_detail.version }}">{{ feed.generator }}</generator>
-    <info type="{{ feed.info_detail.type }}" xml:lang="{{ feed.info_detail.language }}" xml:base="{{ feed.info_detail.base }}">{{ feed.info|escape }}</info>
     <updated>{{ feed.updated }}</updated>
     <id>{{ feed.id }}</id>
     <author>
         <name>{{ feed.author }}</name>
         <uri>{{ feed.author_detail.href }}</uri>
+{% if feed.author_detail.email %}
         <email>{{ feed.author_detail.email }}</email>
+{% endif %}
     </author>
 {% for contributor in feed.contributors %}
     <contributor>
