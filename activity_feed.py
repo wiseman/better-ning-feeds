@@ -200,15 +200,25 @@ def fetch_html(url):
   return HTML_CACHE[url]
 
 
-def process_feed(feed_url):
+def get_template_for_format(format):
+  if format == 'atom1.0':
+    return 'atom_1.0.tmpl'
+  elif format == 'rss2.0':
+    return 'rss_2.0.tmpl'
+  else:
+    return Error('Unknown output format %s' % (format,))
+
+
+def process_feed(feed_url, output_format='atom1.0'):
   feed = feedparser.parse(feed_url)
   improve_feed(feed)
   feed.feed.id = feed_url
-  return generate_feed(feed)
+  return generate_feed(feed, output_format)
 
 
-def generate_feed(feed):
-  with open('atom_1.0.tmpl', 'rb') as tmpl_in:
+def generate_feed(feed, format):
+  template = get_template_for_format(format)
+  with open(template, 'rb') as tmpl_in:
     template = django_template.Template(tmpl_in.read())
     for item in feed['items']:
       item['title_detail']['language'] = 'en-us'
@@ -248,7 +258,7 @@ def main():
     help='The desired output format')
   args = parser.parse_args()
   logging.basicConfig(level=get_logging_level_by_name(args.log_level))
-  output_feed = process_feed(args.input)
+  output_feed = process_feed(args.input, output_format=args.output_format)
   sys.stdout.write(output_feed.encode('utf-8'))
 
 
