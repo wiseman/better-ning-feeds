@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>{{ feed.title|escape }}</title>
+    <description></description>
+    <link>{{ feed.link }}</link>
+    <pubDate>{{ feed.updated }}e</pubDate>
+    <lastBuildDate>{{ feed.updated }}</lastBuildDate>
+    <image>
+      <title>{{ feed.image.title }}</title>
+      <link>{{ feed.image.link }}</link>
+      <url>{{ feed.image.href }}</url>
+      <height>{{ feed.image.height }}</height>
+    </image>
+{% for entry in entries %}
+    <item>
+      <guid isPermaLink="false">{{ entry.id }}</guid>
+      <title>{{ entry.title|escape }}</title>
+      <link>{{ entry.link }}</link>
+      <description>{{ entry.summary|escape }}</description>
+      <pubDate>{{ entry.published }}</pubDate>
+    </item>
+{% endfor %}
+  </channel>
+</rss>
