@@ -12,13 +12,17 @@ import sys
 import urllib2
 
 import bs4
-from django import template as django_template
-from django.conf import settings as django_settings
+
+try:
+  from django import template as django_template
+  from django.conf import settings as django_settings
+  # Need to do this to use django templates.
+  django_settings.configure()
+except:
+  from google.appengine.ext.webapp import template as django_template
 
 import feedparser
 
-# Need to do this to use django templates.
-django_settings.configure()
 
 
 class Error(Exception):
@@ -209,10 +213,15 @@ def get_template_for_format(format):
     return Error('Unknown output format %s' % (format,))
 
 
-def process_feed(feed_url, output_format='atom1.0'):
+def process_feed_url(feed_url, output_format='atom1.0'):
   feed = feedparser.parse(feed_url)
+  return process_feed(feed, output_format=output_format, feed_id=feed_url)
+
+
+def process_feed(feed, output_format='atom1.0', feed_id=None):
   improve_feed(feed)
-  feed.feed.id = feed_url
+  if feed_id:
+    feed.feed.id = feed_id
   return generate_feed(feed, output_format)
 
 
