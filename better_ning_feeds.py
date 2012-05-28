@@ -8,10 +8,10 @@ import feedparser
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
+from google.appengine.ext import deferred
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
-
 
 
 class Feed(db.Model):
@@ -29,14 +29,6 @@ class MainPage(webapp.RequestHandler):
 class CronHandler(webapp.RequestHandler):
   def get(self):
     improve_feeds()
-
-
-class TaskHandler(webapp.RequestHandler):
-  def post(self):
-    feed_url = self.request.get('url')
-    logging.info('Running task to improve feed %s', url)
-    improve_feed(url)
-    logging.info('Task to improve feed %s is finished', url)
 
 
 class FeedHandler(webapp.RequestHandler):
@@ -58,6 +50,7 @@ class FeedHandler(webapp.RequestHandler):
     else:
       # We don't know about this feed yet.  Create an info record for
       # it and then send a temporary redirect to the original.
+      logging.info('This is a new feed; Adding %s', url)
       feed_info = Feed(key_name=url)
       feed_info.put()
       self.redirect(url, permanent=False)
@@ -84,22 +77,21 @@ def improve_feed(feed_url):
     feed_info.improved_content = improved_feed_str
     logging.info('Storing improved feed for %s', url)
     feed_info.put_async()
+  else:
+    logging.info('Skipping improvement of feed %s', feed_url)
 
 
 def improve_feeds():
   logging.info('Kicking off feed improvement tasks')
   for feed_info in Feed.all():
     logging.info('Adding task for feed %s', feed_info.key())
-    taskqueue.add(
-      url='/task/improve_feed',
-      params={'url': feed_info.key()})
+    deferred.defer(improve_feed, feed_info.key())
 
 
 application = webapp.WSGIApplication(
   [('/', MainPage),
    ('/feed/(.*)', FeedHandler),
-   ('/tasks/improve_feeds', CronHandler),
-   ('/tasks/improve_feed', TaskHandler)],
+   ('/tasks/improve_feeds', CronHandler)],
   debug=True)
 
 
