@@ -5,7 +5,9 @@ Creates a usable version of the diydrones.com activity feed.
 __author__ = 'John Wiseman <jjwiseman@gmail.com>'
 
 import argparse
+import jinja2
 import logging
+import os
 import re
 import StringIO
 import sys

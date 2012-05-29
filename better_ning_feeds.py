@@ -15,9 +15,9 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 class Feed(db.Model):
-  # We store the url in the key.
+  feed_url = db.StringProperty(required=True)
   last_fetched_time = db.DateTimeProperty(auto_now=True)
-  improved_content = db.StringProperty()
+  improved_content = db.TextProperty()
 
 
 class MainPage(webapp.RequestHandler):
@@ -42,7 +42,7 @@ class FeedHandler(webapp.RequestHandler):
         # Return the improved content we have.
         logging.info('Returning cached content for feed %s', url)
         self.response.headers['Content-Type'] = 'text/xml'
-        self.response.out.write(improved_content)
+        self.response.out.write(feed_info.improved_content)
       else:
         # We don't have any improved content yet, so send a temporary
         # redirect to the original feed.
@@ -51,7 +51,7 @@ class FeedHandler(webapp.RequestHandler):
       # We don't know about this feed yet.  Create an info record for
       # it and then send a temporary redirect to the original.
       logging.info('This is a new feed; Adding %s', url)
-      feed_info = Feed(key_name=url)
+      feed_info = Feed(key_name=url, feed_url=url)
       feed_info.put()
       self.redirect(url, permanent=False)
 
@@ -66,7 +66,7 @@ def get_feed_info(url):
 
 def improve_feed(feed_url):
   feed_info = get_feed_info(feed_url)
-  url = feed_info.key()
+  url = feed_info.feed_url
   logging.info('Fetching external feed %s', url)
   feed_response = urlfetch.fetch(url)
   logging.info('Response code = %s', feed_response.status_code)
@@ -76,7 +76,7 @@ def improve_feed(feed_url):
       feed, output_format='rss2.0', feed_id=url)
     feed_info.improved_content = improved_feed_str
     logging.info('Storing improved feed for %s', url)
-    feed_info.put_async()
+    db.put_async(feed_info)
   else:
     logging.info('Skipping improvement of feed %s', feed_url)
 
@@ -84,8 +84,9 @@ def improve_feed(feed_url):
 def improve_feeds():
   logging.info('Kicking off feed improvement tasks')
   for feed_info in Feed.all():
-    logging.info('Adding task for feed %s', feed_info.key())
-    deferred.defer(improve_feed, feed_info.key())
+    feed_url = feed_info.feed_url
+    logging.info('Adding task for feed %s', feed_url)
+    deferred.defer(improve_feed, feed_url)
 
 
 application = webapp.WSGIApplication(
