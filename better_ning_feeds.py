@@ -1,3 +1,12 @@
+"""
+Copyright 2012 John Wiseman <jjwiseman@gmail.com>
+
+This is code for a Google appengine app that generates improved Ning
+activity feeds.
+"""
+
+__author__ = 'John Wiseman <jjwiseman@gmail.com>'
+
 import logging
 import sys
 sys.path.insert(0, 'beautifulsoup4-4.0.5-py2.7.egg')

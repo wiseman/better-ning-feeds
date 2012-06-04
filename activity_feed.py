@@ -1,5 +1,8 @@
 """
-Creates a usable version of the diydrones.com activity feed.
+Copyright 2012 John Wiseman <jjwiseman@gmail.com>
+
+Creates a usable version of the diydrones.com activity feed (and maybe
+other Ning activity feeds).
 """
 
 __author__ = 'John Wiseman <jjwiseman@gmail.com>'
@@ -7,7 +10,6 @@ __author__ = 'John Wiseman <jjwiseman@gmail.com>'
 import argparse
 import jinja2
 import logging
-import os
 import re
 import StringIO
 import sys
@@ -24,7 +26,6 @@ except:
   from google.appengine.ext.webapp import template as django_template
 
 import feedparser
-
 
 
 class Error(Exception):
@@ -234,18 +235,6 @@ def generate_feed(feed, format):
     for item in feed['items']:
       item['title_detail']['language'] = 'en-us'
     return template.render(django_template.Context(feed))
-
-
-# def generate_feed(feed):
-#   rss = feedgenerator.Rss201rev2Feed(
-#     title=feed.feed.title,
-#     link=feed.feed.link,
-#     description=feed.feed.description)
-#   for item in feed['items']:
-#     rss.add_item(title=item['title'],
-#                  link=item['link'],
-#                  description=item.summary)
-#   return rss.writeString('utf8')
 
 
 def main():
