@@ -17,3 +17,14 @@ better-ning feeds show blog comments like this:
 > code.  The AC is basically software that drives motors too.  In
 > fact, we might start a ArduCNC code branch.  Then we'll have a tie
 > in to the DIYDrones directly.
+
+Similarly, forum replies show up in the standard Ning feed like this:
+
+<blockquote>
+<a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton</a> <a href="http://diydrones.com/xn/detail/705844:Comment:881184?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:840731?xg_source=activity">Tricopter APM2.0</a>
+</blockquote>
+
+<blockquote>
+<a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton</a> <a href="http://diydrones.com/xn/detail/705844:Comment:881263?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:840731?xg_source=activity">Tricopter APM2.0</a><br>
+<p>That is right Luke.. Its under the mission planner radio config, or it can be changed via the parameters list.</p>
+</blockquote>
