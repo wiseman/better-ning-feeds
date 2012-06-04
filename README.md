@@ -4,7 +4,12 @@ better-ning-feeds
 Takes an exsiting Ning activity feed (RSS) and improves the feed by
 adding more content in cases where Ning provides little or no content.
 
-For example, comments on blog posts show up in the standard Ning activity feed like this:
+better-ning feeds improves the following types of posts:
+
+Blog comments
+-------------
+
+Comments on blog posts show up in the standard Ning activity feed like this:
 
 > Ellison Chan commented on Ellison Chan's blog post Cheap DJI 550 Clone Hexa Frame from HK.
 
@@ -18,11 +23,17 @@ better-ning feeds show blog comments like this:
 > fact, we might start a ArduCNC code branch.  Then we'll have a tie
 > in to the DIYDrones directly.
 
-Similarly, forum replies show up in the standard Ning feed like this:
+
+Forum replies
+-------------
+
+Standard discussion forum replies show up in the standard Ning feed like this:
 
 <blockquote>
 <a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton</a> <a href="http://diydrones.com/xn/detail/705844:Comment:881184?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:840731?xg_source=activity">Tricopter APM2.0</a>
 </blockquote>
+
+better-ning-feeds expands them into this:
 
 <blockquote>
 <a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton</a> <a href="http://diydrones.com/xn/detail/705844:Comment:881263?xg_source=activity">replied</a> to <a href="http://diydrones.com/profile/DeanWynton?xg_source=activity">Dean Wynton's</a> discussion <a href="http://diydrones.com/xn/detail/705844:Topic:840731?xg_source=activity">Tricopter APM2.0</a><br>
