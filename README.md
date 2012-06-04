@@ -1,7 +1,8 @@
 better-ning-feeds
 =================
 
-John Wiseman <jjwiseman@gmail.com>
+John Wiseman
+<jjwiseman@gmail.com>
 
 Takes an existing Ning activity feed (RSS) and improves the feed by
 adding more content in cases where Ning provides little or no content.
