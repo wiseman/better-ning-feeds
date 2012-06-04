@@ -31,8 +31,12 @@ class Feed(db.Model):
 
 class MainPage(webapp.RequestHandler):
   def get(self):
+    feeds = Feed.all()
+    template_values = {'feeds': feeds}
     self.response.headers['Content-Type'] = 'text/html'
-    self.response.out.write(template.render('index.tmpl', {}))
+    self.response.out.write(template.render(
+      'index.tmpl',
+      template.Context(template_values)))
 
 
 class CronHandler(webapp.RequestHandler):

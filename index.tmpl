@@ -4,10 +4,23 @@
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <title>Better Ning Feeds</title>
     <link href="/static/style.css" rel="stylesheet" type="text/css">
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="feed/{{ "http://diydrones.com/activity/log/list?fmt=rss"|urlencode }}">
   </head>
   <body>
     <h1>Better Ning feeds</h1>
     <p>Would you like a better Ning activity feed?</p>
+
+    <p>The following improved feeds are available.  These links can be
+    added to
+    your <a href="http://lifehacker.com/5856652/five-best-rss-newsreaders">feed
+    reader of choice</a>:</p>
+
+    <table>
+{% for feed in feeds %}
+      <tr>
+	<td><a href="feed/{{ feed.feed_url|urlencode }}">{{ feed.feed_url }}</a></td>
+	<td>(last fetched at {{ feed.last_fetched_time }} UTC)</td>
+      </tr>
+{% endfor %}
+    
   </body>
 </html>
