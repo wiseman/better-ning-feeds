@@ -4,8 +4,9 @@ better-ning-feeds
 John Wiseman<br>
 <jjwiseman@gmail.com>
 
-Takes an existing Ning activity feed (RSS) and improves the feed by
-adding more content in cases where Ning provides little or no content.
+This code intends to take an existing Ning activity feed (RSS) and
+improves the feed by adding more content in cases where Ning provides
+little or no content.
 
 better-ning-feeds currently improves the following types of posts:
 
@@ -13,6 +14,9 @@ better-ning-feeds currently improves the following types of posts:
 * Forum replies
 
 See below for details.
+
+I have only tested this code on the activity feed from diydrones.com,
+a Ning site.
 
 
 Blog comments
