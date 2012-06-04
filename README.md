@@ -1,10 +1,18 @@
 better-ning-feeds
 =================
 
-Takes an exsiting Ning activity feed (RSS) and improves the feed by
+John Wiseman <jjwiseman@gmail.com>
+
+Takes an existing Ning activity feed (RSS) and improves the feed by
 adding more content in cases where Ning provides little or no content.
 
-better-ning feeds improves the following types of posts:
+better-ning-feeds currently improves the following types of posts:
+
+* Blog comments
+* Forum replies
+
+See below for details.
+
 
 Blog comments
 -------------
