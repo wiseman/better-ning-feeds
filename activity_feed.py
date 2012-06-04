@@ -230,7 +230,7 @@ def process_feed(feed, output_format='atom1.0', feed_id=None):
 def generate_feed(feed, format):
   template = get_template_for_format(format)
   with open(template, 'rb') as tmpl_in:
-    template = django_template.Template(tmpl_in.read())
+    template = jinja2.Template(tmpl_in.read())
     for item in feed['items']:
       item['title_detail']['language'] = 'en-us'
     return template.render(django_template.Context(feed))
