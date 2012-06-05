@@ -1,5 +1,5 @@
 cron:
 - description: Feed improver
   url: /tasks/improve_feeds
-  schedule: every 30 minutes synchronized
+  schedule: every 10 minutes synchronized
 
