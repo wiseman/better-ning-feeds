@@ -192,6 +192,10 @@ def tag_summary(tag):
     return line[:-1]
 
 
+# To improve feeds we do a little HTML scraping.  Here we keep a cache
+# of web pages so that if we improve two blog comments we don't end up
+# fetching the blog post twice.
+
 HTML_CACHE = {}
 
 
@@ -257,7 +261,8 @@ def main():
     help='The desired output format')
   args = parser.parse_args()
   logging.basicConfig(level=get_logging_level_by_name(args.log_level))
-  output_feed = process_feed(args.input, output_format=args.output_format)
+  feed = feedparser.parse(args.input)
+  output_feed = process_feed(feed, output_format=args.output_format)
   sys.stdout.write(output_feed.encode('utf-8'))
 
 
