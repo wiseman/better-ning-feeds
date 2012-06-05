@@ -18,12 +18,11 @@ import urllib2
 import bs4
 
 try:
-  from django import template as django_template
   from django.conf import settings as django_settings
   # Need to do this to use django templates.
   django_settings.configure()
 except:
-  from google.appengine.ext.webapp import template as django_template
+  pass
 
 import feedparser
 
@@ -234,7 +233,7 @@ def generate_feed(feed, format):
     template = jinja2.Template(tmpl_in.read())
     for item in feed['items']:
       item['title_detail']['language'] = 'en-us'
-    return template.render(django_template.Context(feed))
+    return template.render(feed)
 
 
 def main():
