@@ -54,35 +54,56 @@ def improve_feed(feed):
 
 
 def improve_item(item):
-  if is_blog_comment_item(item):
-    logging.info('------ Improving blog comment item %s', item['title'])
-    improve_blog_comment_item(item)
-  elif is_forum_activity_item(item):
-    logging.info('------ Improving forum reply item %s', item['title'])
-    improve_forum_reply_item(item)
+  item_type = ItemType.find_matching_item_type(item)
+  if item_type:
+    logging.info('------ Improving item of type %s title=%s',
+                 item_type.name, item['title'])
+    item_type.improve(item)
   else:
     logging.warn('------ Skipping unknown feed item %s (%s)',
                  item['id'], item['title'])
 
 
-COMMENT_LINK_RE = re.compile(
-  r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)')
+class ItemType(object):
+  ITEM_TYPES = []
 
+  @classmethod
+  def def_item_type(cls, name=None, title_re=None, link_re=None,
+                    improver=None):
+    item_type = ItemType(name=name, title_re=title_re, link_re=link_re,
+                         improver=improver)
+    cls.ITEM_TYPES.append(item_type)
 
-def parse_comment_link(url):
-  match = COMMENT_LINK_RE.search(url)
-  if match:
-    return match.group(1), match.group(2)
-  else:
-    raise Error('%s does not seem to be a comment link.' % (
-      url,))
+  @classmethod
+  def find_matching_item_type(cls, item):
+    for item_type in cls.ITEM_TYPES:
+      if item_type.is_item_of_this_type(item):
+        return item_type
+    return None
+
+  def __init__(self, name=None, title_re=None, link_re=None, improver=None):
+    self.name = name
+    self.title_re = re.compile(title_re)
+    self.link_re = re.compile(link_re)
+    self.improver = improver
+
+  def is_item_of_this_type(self, item):
+    if self.title_re.search(item['title']):
+      soup = bs4.BeautifulSoup(item['summary'])
+      for anchor in soup.find_all('a'):
+        if self.link_re.search(unicode(anchor)):
+          return True
+    return False
+
+  def improve(self, item):
+    self.improver(self, item)
 
 
 # --------------------
 # Blog comments
 # --------------------
 
-def improve_blog_comment_item(item):
+def improve_blog_comment(unused_item_type, item):
   comment_body = get_blog_comment(item['link'])
   if not comment_body:
     logging.error('Skipping improvement of item, could not find comment.')
@@ -93,25 +114,11 @@ def improve_blog_comment_item(item):
   item['summary'] = summary
 
 
-BLOG_COMMENT_LINK_RE = re.compile(
-  r'http://diydrones.com/xn/detail/([0-9]+):BlogPost:([0-9]+)')
-
-
-def is_blog_comment_url(url):
-  return BLOG_COMMENT_LINK_RE.search(url)
-
-
-BLOG_COMMENT_TITLE_RE = re.compile(
-  r'commented on.+blog post')
-
-
-def is_blog_comment_item(item):
-  if BLOG_COMMENT_TITLE_RE.search(item['title']):
-    soup = bs4.BeautifulSoup(item['summary'])
-    for anchor in soup.find_all('a'):
-      if is_blog_comment_url(unicode(anchor)):
-        return True
-  return False
+ItemType.def_item_type(
+  name='BLOG COMMENT',
+  title_re=r'commented on.+blog post',
+  link_re=r'http://diydrones.com/xn/detail/([0-9]+):BlogPost:([0-9]+)',
+  improver=improve_blog_comment)
 
 
 def get_blog_comment(url):
@@ -132,11 +139,24 @@ def blog_comment_id_from_url(url):
   return '%s:Comment:%s' % (blog_id, comment_id)
 
 
+COMMENT_LINK_RE = re.compile(
+  r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)')
+
+
+def parse_comment_link(url):
+  match = COMMENT_LINK_RE.search(url)
+  if match:
+    return match.group(1), match.group(2)
+  else:
+    raise Error('%s does not seem to be a comment link.' % (
+      url,))
+
+
 # --------------------
 # Forum replies
 # --------------------
 
-def improve_forum_reply_item(item):
+def improve_forum_reply(unused_item_type, item):
   reply_body = get_forum_reply(item['link'])
   if not reply_body:
     logging.error('Skipping improvement of item, could not find reply.')
@@ -147,25 +167,11 @@ def improve_forum_reply_item(item):
   item['summary'] = summary
 
 
-FORUM_REPLY_LINK_RE = re.compile(
-  r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+')
-
-
-def is_forum_activity_url(url):
-  return FORUM_REPLY_LINK_RE.search(url)
-
-
-FORUM_REPLY_TITLE_RE = re.compile(
-  r'replied.*to.*discussion')
-
-
-def is_forum_activity_item(item):
-  if FORUM_REPLY_TITLE_RE.search(item['title']):
-    soup = bs4.BeautifulSoup(item['summary'])
-    for anchor in soup.find_all('a'):
-      if is_forum_activity_url(unicode(anchor)):
-        return True
-  return False
+ItemType.def_item_type(
+  name='FORUM REPLY',
+  title_re=r'replied.*to.*discussion',
+  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+',
+  improver=improve_forum_reply)
 
 
 def get_forum_reply(url):
@@ -190,6 +196,46 @@ def tag_summary(tag):
   s = StringIO.StringIO(unicode(tag))
   for line in s:
     return line[:-1]
+
+
+# --------------------
+# Status comment
+# --------------------
+
+def improve_status_comment(unused_item_type, item):
+  reply_body = get_status_comment(item['link'])
+  if not reply_body:
+    logging.error('Skipping improvement of item, could not find reply.')
+    return
+  summary = item['summary']
+  summary += '\n'
+  summary += reply_body
+  item['summary'] = summary
+
+
+ItemType.def_item_type(
+  name='STATUS COMMENT',
+  title_re=r'commented on.+status',
+  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Status:([0-9])+',
+  improver=improve_status_comment)
+
+
+def get_status_comment(url):
+  idstr = status_comment_id_from_url(url)
+  logging.info('Looking for status comment %s from url %s', idstr, url)
+  soup = fetch_html(url)
+  tag = soup.find(_id=idstr)
+  if tag:
+    logging.info('Found status comment: %s', tag_summary(tag))
+    return unicode(tag)
+  else:
+    logging.error('Could not find status comment %s at url %s', idstr, url)
+    return None
+
+
+def status_comment_id_from_url(url):
+  blog_id, reply_id = parse_comment_link(url)
+  return '%s:Comment:%s' % (blog_id, reply_id)
 
 
 # To improve feeds we do a little HTML scraping.  Here we keep a cache
