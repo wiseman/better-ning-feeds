@@ -249,13 +249,14 @@ def fetch_html(url):
   return HTML_CACHE[url]
 
 
-def get_template_for_format(format):
-  if format == 'atom1.0':
-    return 'atom_1.0.tmpl'
-  elif format == 'rss2.0':
-    return 'rss_2.0.tmpl'
-  else:
-    return Error('Unknown output format %s' % (format,))
+FEED_TEMPLATES = {
+  'atom1.0': 'atom_1.0.tmpl',
+  'rss2.0': 'rss_2.0.tmpl'
+  }
+
+
+def get_template_for_format(feed_format):
+  return FEED_TEMPLATES[feed_format]
 
 
 def process_feed_url(feed_url, output_format='atom1.0'):
@@ -270,8 +271,8 @@ def process_feed(feed, output_format='atom1.0', feed_id=None):
   return generate_feed(feed, output_format)
 
 
-def generate_feed(feed, format):
-  template = get_template_for_format(format)
+def generate_feed(feed, feed_format):
+  template = get_template_for_format(feed_format)
   with open(template, 'rb') as tmpl_in:
     template = jinja2.Template(tmpl_in.read())
     for item in feed['items']:
