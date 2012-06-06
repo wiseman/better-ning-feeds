@@ -17,13 +17,6 @@ import urllib2
 
 import bs4
 
-try:
-  from django.conf import settings as django_settings
-  # Need to do this to use django templates.
-  django_settings.configure()
-except:
-  pass
-
 import feedparser
 
 
@@ -76,8 +69,9 @@ class ItemType(object):
 
   @classmethod
   def find_matching_item_type(cls, item):
+    soup = bs4.BeautifulSoup(item['summary'])
     for item_type in cls.ITEM_TYPES:
-      if item_type.is_item_of_this_type(item):
+      if item_type.is_item_of_this_type(item, soup):
         return item_type
     return None
 
@@ -87,9 +81,8 @@ class ItemType(object):
     self.link_re = re.compile(link_re)
     self.improver = improver
 
-  def is_item_of_this_type(self, item):
+  def is_item_of_this_type(self, item, soup):
     if self.title_re.search(item['title']):
-      soup = bs4.BeautifulSoup(item['summary'])
       for anchor in soup.find_all('a'):
         if self.link_re.search(unicode(anchor)):
           return True
