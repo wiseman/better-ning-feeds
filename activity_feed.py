@@ -392,7 +392,9 @@ def main():
     default='rss2.0',
     help='The desired output format')
   args = parser.parse_args()
-  logging.basicConfig(level=get_logging_level_by_name(args.log_level))
+  logging.basicConfig(
+    level=get_logging_level_by_name(args.log_level),
+    format='%(asctime)s:%(levelname)s:%(module)s:%(lineno)d: %(message)s')
   feed = feedparser.parse(args.input)
   output_feed = process_feed(feed, output_format=args.output_format)
   sys.stdout.write(output_feed.encode('utf-8'))
