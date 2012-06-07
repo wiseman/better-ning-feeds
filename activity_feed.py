@@ -307,7 +307,6 @@ class AsyncUrlRequest(threading.Thread):
     threading.Thread.__init__(self, name='AsyncUrlRequest for %s' % (url,))
     self.url = url
     self.callback = callback
-    self.html = None
     self.request_complete = threading.Event()
 
   def begin_fetch(self):
@@ -315,10 +314,11 @@ class AsyncUrlRequest(threading.Thread):
     self.start()
 
   def run(self):
-    self.html = fetch_html(self.url)
+    html = fetch_html(self.url)
     logging.info('Finished async fetch of %s', self.url)
     if self.callback:
-      self.callback(self.url, self.html)
+      self.callback(self.url, html)
+    logging.info('Finished callback for %s', self.url)
     self.request_complete.set()
 
   def wait(self):
@@ -333,43 +333,51 @@ class Request(object):
 
 class AsyncURLFetchManager(object):
   def __init__(self):
-    self.lock = threading.Condition()
-    # 1:many map from URLs to callbacks.
-    self.url_callbacks = {}
+    pass
 
   def fetch_urls(self, requests):
     logging.info('Async fetch of %s URLs requested.', len(requests))
-    # Build URL -> callback map.
+    # We may be asked to fetch the same URL multiple times, with
+    # different callbacks each time.  For example, to improve two
+    # items that are replies to the same blog post we would be asked
+    # to fetch the URL to the post twice, with two callbacks to
+    # improve the two comments.  We build a 1:many map in
+    # url_callbacks that maps from unique URLs to all callbacks from
+    # that URL.
+    url_callbacks = {}
     for request in requests:
       url = request.url
-      callbacks = self.url_callbacks.get(url, [])
-      self.url_callbacks[url] = callbacks + [request.callback]
+      callbacks = url_callbacks.get(url, [])
+      url_callbacks[url] = callbacks + [request.callback]
+    logging.info(
+      'Async fetch of %s unique URLs requested.', len(url_callbacks))
 
-    # Create requests.
-    active_requests = []
-    for url in self.url_callbacks:
-      callback = self.make_multi_callback(self.url_callbacks[url])
-      active_requests.append(AsyncUrlRequest(url, callback))
+    # Create an async request for each URL.
+    async_requests = []
+    for url in url_callbacks:
+      callback = make_multi_callback(url_callbacks[url])
+      async_requests.append(AsyncUrlRequest(url, callback))
 
     # Begin issuing requests.
-    logging.info('Beginning async fetch of %s URLs', len(active_requests))
+    logging.info('Beginning async fetch of %s URLs', len(async_requests))
     start_time = time.time()
-    for request in active_requests:
+    for request in async_requests:
       request.begin_fetch()
 
     # Wait for requests to complete.
-    logging.info('Waiting for async fetch of %s URLs', len(active_requests))
-    for request in active_requests:
+    logging.info('Waiting for async fetch of %s URLs', len(async_requests))
+    for request in async_requests:
       request.wait()
     end_time = time.time()
     logging.info('Finished async request of %s urls in %s secs',
-                 len(active_requests), end_time - start_time)
+                 len(async_requests), end_time - start_time)
 
-  def make_multi_callback(self, callbacks):
-    def do_callbacks(url, html):
-      for callback in callbacks:
-        callback(url, html)
-    return do_callbacks
+
+def make_multi_callback(callbacks):
+  def do_callbacks(url, html):
+    for callback in callbacks:
+      callback(url, html)
+  return do_callbacks
 
 
 def main():
