@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <title>Better Ning Feeds : Admin</title>
+    <link href="/static/style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Admin</h1>
+
+{% if message %}
+  {% autoescape off %}
+    {{ message }}
+  {% endautoescape %}
+{% endif %}
+
+    <form action="/admin" method="post">
+      <p>
+	Initiate feed update <input type="submit" value="Go">
+      </p>
+    </form>
+  </body>
+</html>

@@ -39,8 +39,28 @@ class MainPage(webapp.RequestHandler):
       template.Context(template_values)))
 
 
+class AdminPage(webapp.RequestHandler):
+  def get(self):
+    template_values = {}
+    self.response.headers['Content-Type'] = 'text/html'
+    self.response.out.write(template.render(
+      'admin.tmpl',
+      template.Context(template_values)))
+
+  def post(self):
+    improve_feeds()
+    template_values = {'message': '<p>Feed update is in progress!</p>'}
+    self.response.headers['Content-Type'] = 'text/html'
+    self.response.out.write(template.render(
+      'admin.tmpl',
+      template.Context(template_values)))
+
+
 class CronHandler(webapp.RequestHandler):
   def get(self):
+    improve_feeds()
+
+  def post(self):
     improve_feeds()
 
 
@@ -104,6 +124,7 @@ def improve_feeds():
 
 application = webapp.WSGIApplication(
   [('/', MainPage),
+   ('/admin', AdminPage),
    ('/feed/(.*)', FeedHandler),
    ('/tasks/improve_feeds', CronHandler)],
   debug=True)

@@ -18,5 +18,8 @@ handlers:
 - url: /tasks/improve_feeds
   script: better_ning_feeds.application
   login: admin
+- url: /admin
+  script: better_ning_feeds.application
+  login: admin
 - url: /.*
   script: better_ning_feeds.application
