@@ -259,13 +259,12 @@ def status_comment_id_from_url(url):
 
 
 def fetch_html(url):
-  start_time = time.time()
+  timer = Timer()
   req = urllib2.urlopen(url)
   content = req.read()
   encoding = req.headers['content-type'].split('charset=')[-1]
-  end_time = time.time()
   logging.info('Fetched URL %s with charset=%s in %s secs',
-               url, encoding, end_time - start_time)
+               url, encoding, timer.elapsed())
   soup = bs4.BeautifulSoup(content, from_encoding='utf-8')
   return soup
 
@@ -314,11 +313,11 @@ class AsyncUrlRequest(threading.Thread):
     self.start()
 
   def run(self):
+    timer = Timer()
     html = fetch_html(self.url)
-    logging.info('Finished async fetch of %s', self.url)
     if self.callback:
       self.callback(self.url, html)
-    logging.info('Finished callback for %s', self.url)
+    logging.info('Finished async fetch of %s in %s', self.url, timer.elapsed())
     self.request_complete.set()
 
   def wait(self):
@@ -360,7 +359,7 @@ class AsyncURLFetchManager(object):
 
     # Begin issuing requests.
     logging.info('Beginning async fetch of %s URLs', len(async_requests))
-    start_time = time.time()
+    timer = Timer()
     for request in async_requests:
       request.begin_fetch()
 
@@ -368,9 +367,8 @@ class AsyncURLFetchManager(object):
     logging.info('Waiting for async fetch of %s URLs', len(async_requests))
     for request in async_requests:
       request.wait()
-    end_time = time.time()
     logging.info('Finished async request of %s urls in %s secs',
-                 len(async_requests), end_time - start_time)
+                 len(async_requests), timer.elapsed())
 
 
 def make_multi_callback(callbacks):
@@ -378,6 +376,14 @@ def make_multi_callback(callbacks):
     for callback in callbacks:
       callback(url, html)
   return do_callbacks
+
+
+class Timer(object):
+  def __init__(self):
+    self.start_time = time.time()
+
+  def elapsed(self):
+    return time.time() - self.start_time
 
 
 def main():
