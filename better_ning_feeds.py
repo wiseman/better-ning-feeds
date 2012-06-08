@@ -14,6 +14,8 @@ sys.path.insert(0, 'beautifulsoup4-4.0.5-py2.7.egg')
 
 import activity_feed
 import feedparser
+
+import bs4
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
@@ -149,7 +151,7 @@ class GaeAsyncUrlFetcher(object):
     timer = activity_feed.Timer()
     rpcs = []
     for url in url_callbacks:
-      callback = activity_feed.make_multi_callback(url_callbacks[url])
+      callback = make_multi_callback(url_callbacks[url])
       rpc = urlfetch.create_rpc()
       rpc.callback = callback
       urlfetch.make_fetch_call(rpc)
@@ -161,6 +163,18 @@ class GaeAsyncUrlFetcher(object):
       rpc.wait()
     logging.info('Finished async request of %s urls in %s secs',
                  len(rpcs), timer.elapsed())
+
+
+def make_multi_callback(rpc, url, callbacks):
+  def do_callbacks():
+    result = rpc.get_result()
+    if result.status_code == 200:
+      soup = bs4.BeautifulSoup(result.content, from_encoding='utf-8')
+      for callback in callbacks:
+        callback(url, soup)
+    else:
+      logging.info('Got status code %s for url %s', result.status_code, url)
+  return do_callbacks
 
 
 application = webapp.WSGIApplication(
