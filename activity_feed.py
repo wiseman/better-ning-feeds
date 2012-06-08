@@ -39,7 +39,7 @@ def get_logging_level_by_name(name):
   return LOGGING_LEVELS[name]
 
 
-def improve_feed(feed):
+def improve_feed(feed, url_fetcher=None):
   logging.info('Improving feed')
   requests = []
   for item in feed['items']:
@@ -50,8 +50,9 @@ def improve_feed(feed):
     except Error, e:
       logging.error('Skipping item %s (%s) due to error %s',
                     item['id'], item['title'], e)
-  manager = AsyncURLFetchManager()
-  manager.fetch_urls(requests)
+  if url_fetcher is None:
+    url_fetcher = AsyncURLFetchManager()
+  url_fetcher.fetch_urls(requests)
   logging.info('Done improving feed')
 
 
@@ -284,8 +285,9 @@ def process_feed_url(feed_url, output_format='atom1.0'):
   return process_feed(feed, output_format=output_format, feed_id=feed_url)
 
 
-def process_feed(feed, output_format='atom1.0', feed_id=None):
-  improve_feed(feed)
+def process_feed(feed, output_format='atom1.0', feed_id=None,
+                 url_fetcher=None):
+  improve_feed(feed, url_fetcher=url_fetcher)
   if feed_id:
     feed.feed.id = feed_id
   return generate_feed(feed, output_format)

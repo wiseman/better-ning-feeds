@@ -106,7 +106,8 @@ def improve_feed(feed_url):
   if feed_response.status_code == 200:
     feed = feedparser.parse(feed_response.content)
     improved_feed_str = activity_feed.process_feed(
-      feed, output_format='rss2.0', feed_id=url)
+      feed, output_format='rss2.0', feed_id=url,
+      url_fetcher=GaeAsyncUrlFetcher())
     feed_info.improved_content = improved_feed_str
     logging.info('Storing improved feed for %s', url)
     db.put_async(feed_info)
@@ -120,6 +121,46 @@ def improve_feeds():
     feed_url = feed_info.feed_url
     logging.info('Adding task for feed %s', feed_url)
     deferred.defer(improve_feed, feed_url)
+
+
+class GaeAsyncUrlFetcher(object):
+  def __init__(self):
+    pass
+
+  def fetch_urls(self, requests):
+    logging.info('Async fetch of %s URLs requested.', len(requests))
+    # We may be asked to fetch the same URL multiple times, with
+    # different callbacks each time.  For example, to improve two
+    # items that are replies to the same blog post we would be asked
+    # to fetch the URL to the post twice, with two callbacks to
+    # improve the two comments.  We build a 1:many map in
+    # url_callbacks that maps from unique URLs to all callbacks from
+    # that URL.
+    url_callbacks = {}
+    for request in requests:
+      url = request.url
+      callbacks = url_callbacks.get(url, [])
+      url_callbacks[url] = callbacks + [request.callback]
+    logging.info(
+      'Async fetch of %s unique URLs requested.', len(url_callbacks))
+
+    # Create an async RPC for each URL.
+    logging.info('Beginning async fetch of %s URLs', len(url_callbacks))
+    timer = activity_feed.Timer()
+    rpcs = []
+    for url in url_callbacks:
+      callback = activity_feed.make_multi_callback(url_callbacks[url])
+      rpc = urlfetch.create_rpc()
+      rpc.callback = callback
+      urlfetch.make_fetch_call(rpc)
+      rpcs.append(rpc)
+
+    # Wait for requests to complete.
+    logging.info('Waiting for async fetch of %s URLs', len(rpcs))
+    for rpc in rpcs:
+      rpc.wait()
+    logging.info('Finished async request of %s urls in %s secs',
+                 len(rpcs), timer.elapsed())
 
 
 application = webapp.WSGIApplication(
