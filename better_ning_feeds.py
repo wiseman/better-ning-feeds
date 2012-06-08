@@ -126,6 +126,9 @@ def improve_feeds():
 
 
 class GaeAsyncUrlFetcher(object):
+  """Asynchronous URL fetcher that uses Google App Engine's support
+  for async URL fetching instead of python threads.
+  """
   def __init__(self):
     pass
 

@@ -44,6 +44,10 @@ def improve_feed(feed, url_fetcher=None):
   requests = []
   for item in feed['items']:
     try:
+      # improve_item may return a Request that contains a URL to fetch
+      # and a callback to execute once we have the content at the URL.
+      # The idea is that we batch up all the URLs we need to fetch so
+      # we can get them asynchronously.
       request = improve_item(item)
       if request:
         requests.append(request)
@@ -333,6 +337,7 @@ class Request(object):
 
 
 class AsyncURLFetchManager(object):
+  """Thread-based asynchronous URL fetcher."""
   def __init__(self):
     pass
 
