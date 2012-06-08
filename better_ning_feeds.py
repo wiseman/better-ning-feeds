@@ -14,6 +14,8 @@ sys.path.insert(0, 'beautifulsoup4-4.0.5-py2.7.egg')
 
 import activity_feed
 import feedparser
+
+import bs4
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
@@ -106,7 +108,8 @@ def improve_feed(feed_url):
   if feed_response.status_code == 200:
     feed = feedparser.parse(feed_response.content)
     improved_feed_str = activity_feed.process_feed(
-      feed, output_format='rss2.0', feed_id=url)
+      feed, output_format='rss2.0', feed_id=url,
+      url_fetcher=GaeAsyncUrlFetcher())
     feed_info.improved_content = improved_feed_str
     logging.info('Storing improved feed for %s', url)
     db.put_async(feed_info)
@@ -120,6 +123,58 @@ def improve_feeds():
     feed_url = feed_info.feed_url
     logging.info('Adding task for feed %s', feed_url)
     deferred.defer(improve_feed, feed_url)
+
+
+class GaeAsyncUrlFetcher(object):
+  def __init__(self):
+    pass
+
+  def fetch_urls(self, requests):
+    logging.info('Async fetch of %s URLs requested.', len(requests))
+    # We may be asked to fetch the same URL multiple times, with
+    # different callbacks each time.  For example, to improve two
+    # items that are replies to the same blog post we would be asked
+    # to fetch the URL to the post twice, with two callbacks to
+    # improve the two comments.  We build a 1:many map in
+    # url_callbacks that maps from unique URLs to all callbacks from
+    # that URL.
+    url_callbacks = {}
+    for request in requests:
+      url = request.url
+      callbacks = url_callbacks.get(url, [])
+      url_callbacks[url] = callbacks + [request.callback]
+    logging.info(
+      'Async fetch of %s unique URLs requested.', len(url_callbacks))
+
+    # Create an async RPC for each URL.
+    logging.info('Beginning async fetch of %s URLs', len(url_callbacks))
+    timer = activity_feed.Timer()
+    rpcs = []
+    for url in url_callbacks:
+      rpc = urlfetch.create_rpc()
+      callback = make_multi_callback(rpc, url, url_callbacks[url])
+      rpc.callback = callback
+      urlfetch.make_fetch_call(rpc, url)
+      rpcs.append(rpc)
+
+    # Wait for requests to complete.
+    logging.info('Waiting for async fetch of %s URLs', len(rpcs))
+    for rpc in rpcs:
+      rpc.wait()
+    logging.info('Finished async request of %s urls in %s secs',
+                 len(rpcs), timer.elapsed())
+
+
+def make_multi_callback(rpc, url, callbacks):
+  def do_callbacks():
+    result = rpc.get_result()
+    if result.status_code == 200:
+      soup = bs4.BeautifulSoup(result.content, from_encoding='utf-8')
+      for callback in callbacks:
+        callback(url, soup)
+    else:
+      logging.info('Got status code %s for url %s', result.status_code, url)
+  return do_callbacks
 
 
 application = webapp.WSGIApplication(

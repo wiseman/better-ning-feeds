@@ -13,6 +13,8 @@ import logging
 import re
 import StringIO
 import sys
+import threading
+import time
 import urllib2
 
 import bs4
@@ -37,13 +39,21 @@ def get_logging_level_by_name(name):
   return LOGGING_LEVELS[name]
 
 
-def improve_feed(feed):
+def improve_feed(feed, url_fetcher=None):
+  logging.info('Improving feed')
+  requests = []
   for item in feed['items']:
     try:
-      improve_item(item)
+      request = improve_item(item)
+      if request:
+        requests.append(request)
     except Error, e:
       logging.error('Skipping item %s (%s) due to error %s',
                     item['id'], item['title'], e)
+  if url_fetcher is None:
+    url_fetcher = AsyncURLFetchManager()
+  url_fetcher.fetch_urls(requests)
+  logging.info('Done improving feed')
 
 
 def improve_item(item):
@@ -51,10 +61,11 @@ def improve_item(item):
   if item_type:
     logging.info('------ Improving item of type %s title=%s',
                  item_type.name, item['title'])
-    item_type.improve(item)
+    return item_type.improve(item)
   else:
     logging.warn('------ Skipping unknown feed item %s (%s)',
                  item['id'], item['title'])
+    return None
 
 
 class ItemType(object):
@@ -89,7 +100,7 @@ class ItemType(object):
     return False
 
   def improve(self, item):
-    self.improver(self, item)
+    return self.improver(self, item)
 
 
 # --------------------
@@ -97,14 +108,21 @@ class ItemType(object):
 # --------------------
 
 def improve_blog_comment(unused_item_type, item):
-  comment_body = get_blog_comment(item['link'])
-  if not comment_body:
-    logging.error('Skipping improvement of item, could not find comment.')
-    return
-  summary = item['summary']
-  summary += '\n'
-  summary += comment_body
-  item['summary'] = summary
+  needed_url = item['link']
+
+  def callback(url, html):
+    logging.info('Blog comment callback for %s', url)
+    comment_body = extract_blog_comment(url, html)
+    if not comment_body:
+      logging.error('Skipping improvement of item, could not find comment.')
+    else:
+      logging.info('Adding comment body to item')
+      summary = item['summary']
+      summary += '\n'
+      summary += comment_body
+      item['summary'] = summary
+
+  return Request(url=needed_url, callback=callback)
 
 
 ItemType.def_item_type(
@@ -114,10 +132,9 @@ ItemType.def_item_type(
   improver=improve_blog_comment)
 
 
-def get_blog_comment(url):
+def extract_blog_comment(url, soup):
   idstr = blog_comment_id_from_url(url)
   logging.info('Looking for comment %s from url %s', idstr, url)
-  soup = fetch_html(url)
   tag = soup.find(_id=idstr)
   if tag:
     logging.info('Found comment: %s', tag_summary(tag))
@@ -150,15 +167,21 @@ def parse_comment_link(url):
 # --------------------
 
 def improve_forum_reply(unused_item_type, item):
-  reply_body = get_forum_reply(item['link'])
-  if not reply_body:
-    logging.error('Skipping improvement of item, could not find reply.')
-    return
-  summary = item['summary']
-  summary += '\n'
-  summary += reply_body
-  item['summary'] = summary
+  needed_url = item['link']
 
+  def callback(url, html):
+    logging.info('Forum reply callback for %s', url)
+    reply_body = extract_forum_reply(url, html)
+    if not reply_body:
+      logging.error('Skipping improvement of item, could not find reply.')
+    else:
+      logging.info('Adding forum reply to item')
+      summary = item['summary']
+      summary += '\n'
+      summary += reply_body
+      item['summary'] = summary
+
+  return Request(url=needed_url, callback=callback)
 
 ItemType.def_item_type(
   name='FORUM REPLY',
@@ -167,10 +190,9 @@ ItemType.def_item_type(
   improver=improve_forum_reply)
 
 
-def get_forum_reply(url):
+def extract_forum_reply(url, soup):
   idstr = forum_reply_id_from_url(url)
   logging.info('Looking for forum reply %s from url %s', idstr, url)
-  soup = fetch_html(url)
   tag = soup.find(id=idstr)
   if tag:
     logging.info('Found forum reply: %s', tag_summary(tag))
@@ -196,14 +218,21 @@ def tag_summary(tag):
 # --------------------
 
 def improve_status_comment(unused_item_type, item):
-  reply_body = get_status_comment(item['link'])
-  if not reply_body:
-    logging.error('Skipping improvement of item, could not find reply.')
-    return
-  summary = item['summary']
-  summary += '\n'
-  summary += reply_body
-  item['summary'] = summary
+  needed_url = item['link']
+
+  def callback(url, html):
+    logging.info('Status comment callback for %s', url)
+    reply_body = extract_status_comment(url, html)
+    if not reply_body:
+      logging.error('Skipping improvement of item, could not find reply.')
+    else:
+      logging.info('Adding status comment to item')
+      summary = item['summary']
+      summary += '\n'
+      summary += reply_body
+      item['summary'] = summary
+
+  return Request(url=needed_url, callback=callback)
 
 
 ItemType.def_item_type(
@@ -213,10 +242,9 @@ ItemType.def_item_type(
   improver=improve_status_comment)
 
 
-def get_status_comment(url):
+def extract_status_comment(url, soup):
   idstr = status_comment_id_from_url(url)
   logging.info('Looking for status comment %s from url %s', idstr, url)
-  soup = fetch_html(url)
   tag = soup.find(_id=idstr)
   if tag:
     logging.info('Found status comment: %s', tag_summary(tag))
@@ -231,22 +259,15 @@ def status_comment_id_from_url(url):
   return '%s:Comment:%s' % (blog_id, reply_id)
 
 
-# To improve feeds we do a little HTML scraping.  Here we keep a cache
-# of web pages so that if we improve two blog comments we don't end up
-# fetching the blog post twice.
-
-HTML_CACHE = {}
-
-
 def fetch_html(url):
-  if not (url in HTML_CACHE):
-    req = urllib2.urlopen(url)
-    content = req.read()
-    encoding = req.headers['content-type'].split('charset=')[-1]
-    logging.info('Fetched URL %s with charset=%s', url, encoding)
-    soup = bs4.BeautifulSoup(content, from_encoding='utf-8')
-    HTML_CACHE[url] = soup
-  return HTML_CACHE[url]
+  timer = Timer()
+  req = urllib2.urlopen(url)
+  content = req.read()
+  encoding = req.headers['content-type'].split('charset=')[-1]
+  logging.info('Fetched URL %s with charset=%s in %s secs',
+               url, encoding, timer.elapsed())
+  soup = bs4.BeautifulSoup(content, from_encoding='utf-8')
+  return soup
 
 
 FEED_TEMPLATES = {
@@ -264,20 +285,107 @@ def process_feed_url(feed_url, output_format='atom1.0'):
   return process_feed(feed, output_format=output_format, feed_id=feed_url)
 
 
-def process_feed(feed, output_format='atom1.0', feed_id=None):
-  improve_feed(feed)
+def process_feed(feed, output_format='atom1.0', feed_id=None,
+                 url_fetcher=None):
+  improve_feed(feed, url_fetcher=url_fetcher)
   if feed_id:
     feed.feed.id = feed_id
   return generate_feed(feed, output_format)
 
 
 def generate_feed(feed, feed_format):
+  logging.info('Generating feed in format %s', feed_format)
   template = get_template_for_format(feed_format)
   with open(template, 'rb') as tmpl_in:
     template = jinja2.Template(tmpl_in.read())
     for item in feed['items']:
       item['title_detail']['language'] = 'en-us'
     return template.render(feed)
+
+
+class AsyncUrlRequest(threading.Thread):
+  def __init__(self, url, callback=None):
+    threading.Thread.__init__(self, name='AsyncUrlRequest for %s' % (url,))
+    self.url = url
+    self.callback = callback
+    self.request_complete = threading.Event()
+
+  def begin_fetch(self):
+    logging.info('Starting async fetch of %s', self.url)
+    self.start()
+
+  def run(self):
+    timer = Timer()
+    html = fetch_html(self.url)
+    if self.callback:
+      self.callback(self.url, html)
+    logging.info('Finished async fetch of %s in %s', self.url, timer.elapsed())
+    self.request_complete.set()
+
+  def wait(self):
+    self.request_complete.wait()
+
+
+class Request(object):
+  def __init__(self, url=None, callback=None):
+    self.url = url
+    self.callback = callback
+
+
+class AsyncURLFetchManager(object):
+  def __init__(self):
+    pass
+
+  def fetch_urls(self, requests):
+    logging.info('Async fetch of %s URLs requested.', len(requests))
+    # We may be asked to fetch the same URL multiple times, with
+    # different callbacks each time.  For example, to improve two
+    # items that are replies to the same blog post we would be asked
+    # to fetch the URL to the post twice, with two callbacks to
+    # improve the two comments.  We build a 1:many map in
+    # url_callbacks that maps from unique URLs to all callbacks from
+    # that URL.
+    url_callbacks = {}
+    for request in requests:
+      url = request.url
+      callbacks = url_callbacks.get(url, [])
+      url_callbacks[url] = callbacks + [request.callback]
+    logging.info(
+      'Async fetch of %s unique URLs requested.', len(url_callbacks))
+
+    # Create an async request for each URL.
+    async_requests = []
+    for url in url_callbacks:
+      callback = make_multi_callback(url_callbacks[url])
+      async_requests.append(AsyncUrlRequest(url, callback))
+
+    # Begin issuing requests.
+    logging.info('Beginning async fetch of %s URLs', len(async_requests))
+    timer = Timer()
+    for request in async_requests:
+      request.begin_fetch()
+
+    # Wait for requests to complete.
+    logging.info('Waiting for async fetch of %s URLs', len(async_requests))
+    for request in async_requests:
+      request.wait()
+    logging.info('Finished async request of %s urls in %s secs',
+                 len(async_requests), timer.elapsed())
+
+
+def make_multi_callback(callbacks):
+  def do_callbacks(url, html):
+    for callback in callbacks:
+      callback(url, html)
+  return do_callbacks
+
+
+class Timer(object):
+  def __init__(self):
+    self.start_time = time.time()
+
+  def elapsed(self):
+    return time.time() - self.start_time
 
 
 def main():
@@ -300,7 +408,9 @@ def main():
     default='rss2.0',
     help='The desired output format')
   args = parser.parse_args()
-  logging.basicConfig(level=get_logging_level_by_name(args.log_level))
+  logging.basicConfig(
+    level=get_logging_level_by_name(args.log_level),
+    format='%(asctime)s:%(levelname)s:%(module)s:%(lineno)d: %(message)s')
   feed = feedparser.parse(args.input)
   output_feed = process_feed(feed, output_format=args.output_format)
   sys.stdout.write(output_feed.encode('utf-8'))
