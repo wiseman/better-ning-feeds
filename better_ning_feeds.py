@@ -151,10 +151,10 @@ class GaeAsyncUrlFetcher(object):
     timer = activity_feed.Timer()
     rpcs = []
     for url in url_callbacks:
-      callback = make_multi_callback(url_callbacks[url])
       rpc = urlfetch.create_rpc()
+      callback = make_multi_callback(rpc, url, url_callbacks[url])
       rpc.callback = callback
-      urlfetch.make_fetch_call(rpc)
+      urlfetch.make_fetch_call(rpc, url)
       rpcs.append(rpc)
 
     # Wait for requests to complete.
