@@ -108,6 +108,52 @@ class ItemType(object):
 
 
 # --------------------
+# User page comments
+# --------------------
+
+def improve_user_page_comment(item_type, item):
+  needed_url = item['link']
+
+  def callback(url, html):
+    logging.info('%s callback for %s', item_type.name, url)
+    comment_body = extract_user_page_comment(url, html)
+    if not comment_body:
+      logging.error('Skipping improvement of item, could not find comment.')
+    else:
+      logging.info('Adding comment body to item')
+      summary = item['summary']
+      summary += '\n'
+      summary += comment_body
+      item['summary'] = summary
+
+  return Request(url=needed_url, callback=callback)
+
+
+def extract_user_page_comment(url, soup):
+  idstr = user_page_comment_id_from_url(url)
+  logging.info('Looking for comment %s from url %s', idstr, url)
+  tag = soup.find(id=idstr)
+  if tag:
+    logging.info('Found comment: %s', tag_summary(tag))
+    return unicode(tag)
+  else:
+    logging.error('Could not find comment %s at url %s', idstr, url)
+    return None
+
+
+def user_page_comment_id_from_url(url):
+  blog_id, comment_id = parse_comment_link(url)
+  return 'chatter-%s:Comment:%s' % (blog_id, comment_id)
+
+
+ItemType.def_item_type(
+  name='USER PAGE COMMENT',
+  title_re=r'left a comment for',
+  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)',
+  improver=improve_user_page_comment)
+
+
+# --------------------
 # Blog comments
 # --------------------
 
