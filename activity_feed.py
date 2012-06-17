@@ -63,8 +63,8 @@ def improve_feed(feed, url_fetcher=None):
 def improve_item(item):
   item_type = ItemType.find_matching_item_type(item)
   if item_type:
-    logging.info('------ Improving item of type %s title=%s',
-                 item_type.name, item['title'])
+    logging.info('------ Improving item of type %s title=%s, url=%s',
+                 item_type.name, item['title'], item['link'])
     return item_type.improve(item)
   else:
     logging.warn('------ Skipping unknown feed item %s (%s)',
