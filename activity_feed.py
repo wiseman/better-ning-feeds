@@ -213,6 +213,33 @@ def parse_comment_link(url):
 
 
 # --------------------
+# Forum posts
+# --------------------
+
+def improve_forum_post(unused_item_type, item):
+  # We're just going to insert the title of the post into the title
+  # element of the feed item, so we don't need to fetch any other URL,
+  # so we have no callback.
+  # The title is in an <h3>.
+  soup = bs4.BeautifulSoup(item['description'])
+  title = soup.find('h3')
+  if title:
+    title_text = title.get_text()
+    logging.info('Adding discussion title to item: %s', title_text)
+    item['title'] = '%s: %s' % (item['title'], title_text)
+  else:
+    logging.warn('Unable to find discussion title in %s', soup)
+  return None
+
+
+ItemType.def_item_type(
+  name='FORUM POST',
+  title_re=r'posted a discussion',
+  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+',
+  improver=improve_forum_post)
+
+
+# --------------------
 # Forum replies
 # --------------------
 
