@@ -409,6 +409,18 @@ class Request(object):
     self.callback = callback
 
 
+def ning_url_key(url):
+  # We want to consider the following URLs as "the same" for purposes
+  # of fetching:
+  # http://diydrones.com/xn/detail/705844:Comment:894897?xg_source=activity
+  # http://diydrones.com/xn/detail/705844:Comment:894998?xg_source=activity
+  colon_pos = url.find(':', 5)
+  if colon_pos < 0:
+    return url
+  else:
+    return url[:colon_pos]
+
+
 class AsyncURLFetchManager(object):
   """Thread-based asynchronous URL fetcher."""
   def __init__(self):
@@ -423,17 +435,22 @@ class AsyncURLFetchManager(object):
     # improve the two comments.  We build a 1:many map in
     # url_callbacks that maps from unique URLs to all callbacks from
     # that URL.
-    url_callbacks = {}
+    url_callbacks = {}  # Indexed by URL key
+    url_key_to_url = {}
     for request in requests:
       url = request.url
-      callbacks = url_callbacks.get(url, [])
-      url_callbacks[url] = callbacks + [request.callback]
+      url_key = ning_url_key(url)
+      logging.info('WOOJJW %s %s', url_key, url)
+      callbacks = url_callbacks.get(url_key, [])
+      url_callbacks[url_key] = callbacks + [request.callback]
+      url_key_to_url[url_key] = url
     logging.info(
       'Async fetch of %s unique URLs requested.', len(url_callbacks))
 
     # Create an async request for each URL.
     async_requests = []
-    for url in url_callbacks:
+    for url_key in url_callbacks:
+      url = url_key_to_url[url_key]
       callback = make_multi_callback(url_callbacks[url])
       async_requests.append(AsyncUrlRequest(url, callback))
 
