@@ -16,6 +16,7 @@ import activity_feed
 import feedparser
 
 import bs4
+from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
@@ -69,12 +70,20 @@ class CronHandler(webapp.RequestHandler):
 class FeedHandler(webapp.RequestHandler):
   def get(self, url):
     logging.info('Handling request for feed %s', url)
+    cached_feed = memcache.get(url)
+    if cached_feed:
+      logging.info('memcache hit for %s', url)
+      self.response.headers['Content-Type'] = 'text/xml'
+      self.response.out.write(cached_feed)
+      return
+
     feed_info = get_feed_info(url)
     if feed_info:
       # We know about this feed.  Now we check whether we've improved
       # its content yet.
       if feed_info.improved_content:
         # Return the improved content we have.
+        memcache.add(url, feed_info.improved_content)
         logging.info('Returning cached content for feed %s', url)
         self.response.headers['Content-Type'] = 'text/xml'
         self.response.out.write(feed_info.improved_content)
@@ -113,6 +122,8 @@ def improve_feed(feed_url):
     feed_info.improved_content = improved_feed_str
     logging.info('Storing improved feed for %s', url)
     db.put_async(feed_info)
+    logging.info('Deleting %s from memcache', feed_url)
+    memcache.delete(feed_url)
   else:
     logging.info('Skipping improvement of feed %s', feed_url)
 
