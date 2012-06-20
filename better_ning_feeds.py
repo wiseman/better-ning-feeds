@@ -14,6 +14,7 @@ sys.path.insert(0, 'beautifulsoup4-4.0.5-py2.7.egg')
 
 import activity_feed
 import feedparser
+import pickle
 
 import bs4
 from google.appengine.api import memcache
@@ -30,6 +31,7 @@ class Feed(db.Model):
   feed_url = db.StringProperty(required=True)
   last_fetched_time = db.DateTimeProperty(auto_now=True)
   improved_content = db.TextProperty()
+  items = db.BlobProperty()
 
 
 class MainPage(webapp.RequestHandler):
@@ -116,9 +118,10 @@ def improve_feed(feed_url):
   logging.info('Response code = %s', feed_response.status_code)
   if feed_response.status_code == 200:
     feed = feedparser.parse(feed_response.content)
-    improved_feed_str = activity_feed.process_feed(
-      feed, output_format='rss2.0', feed_id=url,
-      url_fetcher=GaeAsyncUrlFetcher())
+    feed.feed.id = url
+    activity_feed.improve_feed(feed, url_fetcher=GaeAsyncUrlFetcher())
+    replace_old_items(feed, feed_info)
+    improved_feed_str = activity_feed.generate_feed(feed, 'rss2.0')
     feed_info.improved_content = improved_feed_str
     logging.info('Storing improved feed for %s', url)
     db.put_async(feed_info)
@@ -126,6 +129,50 @@ def improve_feed(feed_url):
     memcache.delete(feed_url)
   else:
     logging.info('Skipping improvement of feed %s', feed_url)
+
+
+ITEM_HISTORY_LENGTH = 100
+
+
+def replace_old_items(feed, feed_info):
+  """Merges new items with old items and keeps the N newest."""
+  items = feed['items']
+  logging.info('Replacing old items.  Have %s possibly new items', len(items))
+  if feed_info.items:
+    old_items = pickle.loads(feed_info.items)
+    logging.info('Considering %s old items.', len(old_items))
+    items += old_items
+  # Sort the items from newest to oldest.
+  items = sorted(items, key=item_date, reverse=True)
+  # remove_duplicates will remove the duplicate elements that come
+  # later, i.e. are older.
+  items = remove_duplicates(
+    items,
+    test_fn=lambda a, b: a['id'] == b['id'])
+  # Truncate list of items to the most recent N.
+  items = items[0:ITEM_HISTORY_LENGTH]
+  logging.info('Storing %s newest items', len(items))
+  feed['items'] = items
+  feed_info.items = pickle.dumps(items)
+
+
+def item_date(item):
+  return item['published_parsed']
+
+
+def remove_duplicates(seq, test_fn=lambda a, b: a == b):
+  result = []
+  for e in seq:
+    if not element_of(e, result, test_fn):
+      result.append(e)
+  return result
+
+
+def element_of(elt, set, test_fn):
+  for e in set:
+    if test_fn(elt, e):
+      return True
+  return False
 
 
 def improve_feeds():
