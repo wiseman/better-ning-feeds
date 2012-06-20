@@ -149,7 +149,7 @@ def user_page_comment_id_from_url(url):
 ItemType.def_item_type(
   name='USER PAGE COMMENT',
   title_re=r'left a comment for',
-  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)',
+  link_re=r'http://.+/xn/detail/([0-9]+):Comment:([0-9]+)',
   improver=improve_user_page_comment)
 
 
@@ -176,7 +176,7 @@ def improve_blog_post(unused_item_type, item):
 ItemType.def_item_type(
   name='BLOG POST',
   title_re=r'posted a blog post',
-  link_re=r'http://diydrones.com/xn/detail/([0-9]+):BlogPost:([0-9])+',
+  link_re=r'http://.+/xn/detail/([0-9]+):BlogPost:([0-9])+',
   improver=improve_blog_post)
 
 
@@ -205,7 +205,7 @@ def improve_blog_comment(unused_item_type, item):
 ItemType.def_item_type(
   name='BLOG COMMENT',
   title_re=r'commented on.+blog post',
-  link_re=r'http://diydrones.com/xn/detail/([0-9]+):BlogPost:([0-9]+)',
+  link_re=r'http://.+/xn/detail/([0-9]+):BlogPost:([0-9]+)',
   improver=improve_blog_comment)
 
 
@@ -227,7 +227,7 @@ def blog_comment_id_from_url(url):
 
 
 COMMENT_LINK_RE = re.compile(
-  r'http://diydrones.com/xn/detail/([0-9]+):Comment:([0-9]+)')
+  r'http://.+/xn/detail/([0-9]+):Comment:([0-9]+)')
 
 
 def parse_comment_link(url):
@@ -262,7 +262,7 @@ def improve_forum_post(unused_item_type, item):
 ItemType.def_item_type(
   name='FORUM POST',
   title_re=r'posted a discussion',
-  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+',
+  link_re=r'http://.+/xn/detail/([0-9]+):Topic:([0-9])+',
   improver=improve_forum_post)
 
 
@@ -290,7 +290,7 @@ def improve_forum_reply(unused_item_type, item):
 ItemType.def_item_type(
   name='FORUM REPLY',
   title_re=r'replied.*to.*discussion',
-  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Topic:([0-9])+',
+  link_re=r'http://.+/xn/detail/([0-9]+):Topic:([0-9])+',
   improver=improve_forum_reply)
 
 
@@ -342,7 +342,7 @@ def improve_status_comment(unused_item_type, item):
 ItemType.def_item_type(
   name='STATUS COMMENT',
   title_re=r'commented on.+status',
-  link_re=r'http://diydrones.com/xn/detail/([0-9]+):Status:([0-9])+',
+  link_re=r'http://.+/xn/detail/([0-9]+):Status:([0-9])+',
   improver=improve_status_comment)
 
 
