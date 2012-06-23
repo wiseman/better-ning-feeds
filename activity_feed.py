@@ -154,6 +154,52 @@ ItemType.def_item_type(
 
 
 # --------------------
+# Group page comments
+# --------------------
+
+def improve_group_page_comment(item_type, item):
+  needed_url = item['link']
+
+  def callback(url, html):
+    logging.info('%s callback for %s', item_type.name, url)
+    comment_body = extract_group_page_comment(url, html)
+    if not comment_body:
+      logging.error('Skipping improvement of item, could not find comment.')
+    else:
+      logging.info('Adding comment body to item')
+      summary = item['summary']
+      summary += '\n'
+      summary += comment_body
+      item['summary'] = summary
+
+  return Request(url=needed_url, callback=callback)
+
+
+def extract_group_page_comment(url, soup):
+  idstr = group_page_comment_id_from_url(url)
+  logging.info('Looking for comment %s from url %s', idstr, url)
+  tag = soup.find(_id=idstr)
+  if tag:
+    logging.info('Found comment: %s', tag_summary(tag))
+    return unicode(tag)
+  else:
+    logging.error('Could not find comment %s at url %s', idstr, url)
+    return None
+
+
+def group_page_comment_id_from_url(url):
+  blog_id, comment_id = parse_comment_link(url)
+  return '%s:Comment:%s' % (blog_id, comment_id)
+
+
+ItemType.def_item_type(
+  name='GROUP PAGE COMMENT',
+  title_re=r'commented on.*group',
+  link_re=r'http://.+/xn/detail/([0-9]+):Comment:([0-9]+)',
+  improver=improve_group_page_comment)
+
+
+# --------------------
 # Blog posts
 # --------------------
 
